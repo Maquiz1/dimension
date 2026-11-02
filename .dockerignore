@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.*
+.venv/
+**/__pycache__/
+*.pyc
+staticfiles/
+media/
+odk-central/
+# Study documents and the dictionary never go into the image; the dictionary is mounted read-only
+documentations/
+data_dictionary/

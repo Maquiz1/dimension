@@ -1,0 +1,37 @@
+# DIMENSION on the Hostinger server (/opt/dimension), https://dimension.tamris.org
+#
+# docker-compose.yml is the local development database. The server's .env sets COMPOSE_FILE to this file, so plain
+# `docker compose` commands use it there.
+#
+# Like the other apps on the server, the web container listens only on 127.0.0.1:WEB_PORT (default 8091) and the
+# host nginx forwards dimension.tamris.org to it (docker/nginx-dimension.conf); certbot adds HTTPS.
+
+services:
+  dimension-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  dimension-web:
+    build: .
+    image: dimension:latest
+    env_file: .env
+    environment:
+      POSTGRES_HOST: dimension-db
+      POSTGRES_PORT: "5432"
+    volumes:
+      # Not in git or in the image. Copy it with copy-dictionary-to-server.sh.
+      - ./data_dictionary:/app/data_dictionary:ro
+    depends_on:
+      - dimension-db
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8091}:8000"
+    restart: always
+
+volumes:
+  postgres_data:

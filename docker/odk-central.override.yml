@@ -1,0 +1,9 @@
+# Copied to /opt/odk-central/docker-compose.override.yml by install-odk-central.sh.
+#
+# Central's own compose file publishes HTTP_PORT and HTTPS_PORT on all addresses, which would clash with the host
+# nginx. This replaces them with one port on 127.0.0.1. HTTPS_PORT stays 443 in Central's .env because Central uses
+# it to build its public links (https://odk.tamris.org). Needs Docker Compose 2.24.4 or newer for !override.
+services:
+  nginx:
+    ports: !override
+      - "127.0.0.1:${ODK_WEB_PORT:-8092}:80"
