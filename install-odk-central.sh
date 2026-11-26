@@ -74,6 +74,8 @@ if [ ! -f .env ]; then
     chmod 600 .env
 fi
 cp "$PROJECT_DIR/docker/odk-central.override.yml" docker-compose.override.yml
+# Central's install guide requires this file; its build fails without it, on fresh installs too.
+touch files/allow-postgres14-upgrade
 
 # Refuse to start if Central would take any public port, such as the host nginx's 80 and 443.
 docker compose config --format json | python3 -c '

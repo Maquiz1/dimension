@@ -50,7 +50,7 @@ Back on the server:
 
 ```bash
 ./deploy-dimension.sh --first
-curl -sI http://127.0.0.1:8091/admin/login/       # a 301 to HTTPS is normal
+curl -sI -H 'Host: dimension.tamris.org' http://127.0.0.1:8091/admin/login/       # a 301 to HTTPS is normal
 ```
 
 `--first` loads the clinics and asks for the first administrator account. Sequences stay empty until the statistician's allocation is in the workbook. Copy the updated workbook across and run `load_sites` again; it refuses to change an allocation already loaded.

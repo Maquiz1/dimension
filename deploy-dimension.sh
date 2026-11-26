@@ -52,7 +52,7 @@ echo "Switching to the new code..."
 docker compose up -d
 
 if [ "${1:-}" = "--first" ]; then
-    if [ -s data_dictionary/DIMENSION_Data_Dictionary_v0.1.xlsx ]; then
+    if [ -s data_dictionary/DIMENSION_Data_Dictionary_v0.3.xlsx ]; then
         echo "First deployment: loading the clinics..."
         docker compose exec -T dimension-web python manage.py load_sites
     else
@@ -67,7 +67,7 @@ fi
 echo
 docker compose ps
 echo
-echo "Deployment completed. Check from the server:  curl -sI http://127.0.0.1:\${WEB_PORT:-8091}/admin/login/"
+echo "Deployment completed. Check from the server:  curl -sI -H 'Host: dimension.tamris.org' http://127.0.0.1:\${WEB_PORT:-8091}/admin/login/"
 if [ -n "$DB_BACKUP" ]; then
     echo "Backup from before this deployment: $DB_BACKUP"
     echo "To roll back the code:    git checkout \$(cat ${DB_BACKUP%_db.dump}_commit.txt) && docker compose build dimension-web && docker compose up -d"

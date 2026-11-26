@@ -19,7 +19,7 @@ Data system for the DIMENSION stepped-wedge trial of digital mental health train
 
 ## Files not in git
 
-`documentations/` and `data_dictionary/` are kept out of this repository, as is `.env`. Get them from the study team and place them in the project root. Without `data_dictionary/DIMENSION_Data_Dictionary_v0.1.xlsx`, `load_sites` and `build_xlsform.py` stop with an error, and the tests that need it are skipped.
+`documentations/` and `data_dictionary/` are kept out of this repository, as is `.env`. Get them from the study team and place them in the project root. Without `data_dictionary/DIMENSION_Data_Dictionary_v0.3.xlsx`, `load_sites` and `build_xlsform.py` stop with an error, and the tests that need it are skipped.
 
 ## Setup
 

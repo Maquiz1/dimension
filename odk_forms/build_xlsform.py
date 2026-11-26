@@ -15,7 +15,7 @@ from pathlib import Path
 from openpyxl import Workbook, load_workbook
 
 ROOT = Path(__file__).resolve().parent.parent
-DICTIONARY = ROOT / 'data_dictionary' / 'DIMENSION_Data_Dictionary_v0.1.xlsx'
+DICTIONARY = ROOT / 'data_dictionary' / 'DIMENSION_Data_Dictionary_v0.3.xlsx'
 OUTPUT = ROOT / 'odk_forms' / 'generated'
 UNTRANSLATED = '[EN] '  # Makes a missing Swahili label obvious to anyone testing the form.
 ALERT_EN = (
