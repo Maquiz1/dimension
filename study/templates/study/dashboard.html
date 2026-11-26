@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DIMENSION Study Dashboard</title>
+<style>
+  :root {
+    --ink: #14303A; --body: #3D5560; --muted: #6A7F88; --paper: #F6F4EE; --card: #FFFFFF;
+    --line: #DCE3E1; --teal: #1F5F6B; --teal-soft: #D4E6E6; --amber: #E3A23B; --amber-soft: #FBEBD0;
+    --alert: #A8432E; --alert-soft: #F6DCD5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--body); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  header { background: var(--ink); color: var(--paper); padding: 20px 32px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+  header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .02em; }
+  header p { margin: 2px 0 0; color: #BFD3D6; font-size: 14px; }
+  header nav a { color: var(--paper); text-decoration: none; margin-left: 16px; font-size: 14px; border-bottom: 1px solid #5E7F86; }
+  .banner { background: var(--amber-soft); color: #6B4A10; padding: 10px 32px; font-size: 14px; border-bottom: 1px solid #EED3A3; }
+  main { max-width: 1200px; margin: 0 auto; padding: 28px 32px 48px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  main > *, .two > *, .kpis > * { min-width: 0; }
+  .nowrap { white-space: nowrap; }
+  h2 { margin: 0 0 4px; color: var(--ink); font-size: 18px; }
+  .sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 22px 24px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--teal); border-radius: 10px; padding: 16px 20px; }
+  .kpi.alert { border-top-color: var(--alert); }
+  .kpi .num { font-size: 34px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+  .kpi .label { font-size: 14px; color: var(--body); margin-top: 4px; }
+  .kpi .note { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .wedge td.cell { text-align: center; font-weight: 600; font-size: 13px; padding: 8px 4px; min-width: 44px; }
+  .ctrl { background: var(--teal-soft); color: var(--teal); }
+  .intv { background: var(--amber); color: #3A2A08; }
+  .now { box-shadow: inset 0 0 0 3px var(--ink); }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 4px; font-weight: 600; margin-right: 6px; }
+  .pending { color: var(--muted); font-style: italic; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 24px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr 40px; gap: 10px; align-items: center; margin: 8px 0; font-size: 14px; }
+  .rng { color: var(--muted); font-size: 12px; }
+  .bar { height: 14px; background: var(--teal-soft); border-radius: 3px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--teal); }
+  .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+  .yes { color: var(--teal); font-weight: 600; }
+  .flag { color: var(--alert); font-weight: 600; }
+  @media (max-width: 600px) {
+    header, .banner, main { padding-left: 16px; padding-right: 16px; }
+    .bar-row { grid-template-columns: 110px 1fr 32px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>DIMENSION Study Dashboard</h1>
+    <p>Stepped-wedge trial of digital mental health training in 20 HIV clinics, Tanzania</p>
+  </div>
+  <nav><a href="/admin/">Admin</a><a href="/admin/logout/" onclick="event.preventDefault(); document.getElementById('logout').submit();">Log out</a></nav>
+  <form id="logout" method="post" action="/admin/logout/" hidden>{% csrf_token %}</form>
+</header>
+<div class="banner">Draft system: test data only. Counts only, no participant identifiers are shown.</div>
+
+<main>
+  <section class="kpis" aria-label="Summary">
+    <div class="kpi">
+      <div class="num">{{ clinic_count }}</div>
+      <div class="label">Clinics</div>
+      <div class="note">{% for region, n in regions %}{{ region }} {{ n }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>
+    </div>
+    <div class="kpi">
+      <div class="num">{{ allocated_count }} / {{ clinic_count }}</div>
+      <div class="label">Clinics allocated to a sequence</div>
+      <div class="note">{% if allocated_count %}From the statistician's allocation{% else %}Waiting for the statistician{% endif %}</div>
+    </div>
+    <div class="kpi">
+      <div class="num">{{ submission_count }}</div>
+      <div class="label">Form submissions received</div>
+      <div class="note">{{ review_count }} flagged for review</div>
+    </div>
+    <div class="kpi alert">
+      <div class="num">{{ item9_alerts }}</div>
+      <div class="label">PHQ-9 item 9 safety alerts</div>
+      <div class="note">Thoughts of death or self-harm reported</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Stepped-wedge plan</h2>
+    <p class="sub">5 sequences of 4 clinics over 8 periods of 3 months. Every clinic starts in control and switches to intervention at its step.
+      {% if not periods_defined %}Period dates are not set yet.{% elif current_period %}Current period: {{ current_period }}.{% endif %}</p>
+    <div class="scroll">
+      <table class="wedge">
+        <thead>
+          <tr><th>Sequence</th>{% for p in periods %}<th class="num">P{{ p }}</th>{% endfor %}<th>Clinics</th></tr>
+        </thead>
+        <tbody>
+          {% for row in wedge %}
+          <tr>
+            <th scope="row">{{ row.sequence }}</th>
+            {% for cell in row.cells %}
+            <td class="cell {% if cell.intervention %}intv{% else %}ctrl{% endif %}{% if cell.period == current_period %} now{% endif %}">{% if cell.intervention %}I{% else %}C{% endif %}</td>
+            {% endfor %}
+            <td>{% if row.clinics %}{{ row.clinics|join:", " }}{% else %}<span class="pending">Awaiting allocation</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <span><span class="chip ctrl">C</span>Control (usual care)</span>
+      <span><span class="chip intv">I</span>Intervention</span>
+      {% if current_period %}<span><span class="chip now">P{{ current_period }}</span>Current period</span>{% endif %}
+    </div>
+  </section>
+
+  <section class="two">
+    <div class="card">
+      <h2>Submissions by form</h2>
+      <p class="sub">Pulled from ODK Central and scored on the server.</p>
+      <div class="scroll">
+      <table>
+        <thead><tr><th>Form</th><th class="num">Received</th><th class="num">For review</th></tr></thead>
+        <tbody>
+          {% for form in forms %}
+          <tr>
+            <td><span class="nowrap">{{ form.name }}</span><div class="rng">{% if form.latest %}Latest {{ form.latest|date:"j M Y, H:i" }}{% else %}None yet{% endif %}</div></td>
+            <td class="num">{{ form.total }}</td>
+            <td class="num">{% if form.review %}<span class="flag">{{ form.review }}</span>{% else %}0{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="card">
+      <h2>PHQ-9 depression severity</h2>
+      <p class="sub">Score of 10 or more is referred to a clinician.</p>
+      {% for band in phq_bands %}
+      <div class="bar-row"><div>{{ band.label }} <span class="rng">{{ band.range }}</span></div><div class="bar"><span style="width: {{ band.width }}%"></span></div><div class="n">{{ band.count }}</div></div>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h2>GAD-7 anxiety severity</h2>
+      <p class="sub">Score of 10 or more is referred to a clinician.</p>
+      {% for band in gad_bands %}
+      <div class="bar-row"><div>{{ band.label }} <span class="rng">{{ band.range }}</span></div><div class="bar"><span style="width: {{ band.width }}%"></span></div><div class="n">{{ band.count }}</div></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Clinics</h2>
+    <p class="sub">The 20 clinics confirmed by the statistician.</p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Code</th><th>Clinic</th><th>Type</th><th>District</th><th>Region</th><th>Mental health unit</th><th class="num">Sequence</th><th class="num">Submissions</th></tr>
+        </thead>
+        <tbody>
+          {% for f in facilities %}
+          <tr>
+            <td>{{ f.code }}</td>
+            <td>{{ f.name }}</td>
+            <td>{{ f.facility_type }}</td>
+            <td>{{ f.district }}</td>
+            <td>{{ f.region }}</td>
+            <td>{% if f.has_mental_health_unit %}<span class="yes">Yes</span>{% else %}No{% endif %}</td>
+            <td class="num">{% if f.sequence %}{{ f.sequence }}{% else %}<span class="pending">Pending</span>{% endif %}</td>
+            <td class="num">{{ f.submissions }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="pending">No clinics loaded. Run the load_sites command.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</body>
+</html>

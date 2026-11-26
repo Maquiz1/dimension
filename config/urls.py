@@ -16,9 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from django.views.generic import RedirectView
+
+from study.views import dashboard
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/admin/')),
+    path('', dashboard, name='dashboard'),
     path('admin/', admin.site.urls),
 ]

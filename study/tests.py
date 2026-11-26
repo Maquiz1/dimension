@@ -99,3 +99,43 @@ class ExposureForTests(TestCase):
     def test_date_outside_periods(self):
         self.facility.sequence = 1
         self.assertEqual(exposure_for(self.facility, date(2030, 1, 1)), (None, None))
+
+
+class DashboardTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        from capture.ingest import ingest_record
+
+        self.facility = Facility.objects.create(
+            code='T01', name='Test Clinic', facility_type='Dispensary', ward='W', clients=1,
+            region='Dar es Salaam', district='D', selection_method='M', has_mental_health_unit=True,
+        )
+        record = {f'phq_{i:02d}': '1' for i in range(1, 10)}
+        record.update({'__id': 'uuid:1', 'study_id': 'SECRET-ID-001', 'facility_code': 'T01',
+                       'visit_date': '2027-07-01', 'phq_09': '2'})
+        ingest_record('dim_5p_phq9', record)
+        self.staff = User.objects.create_user('staff', password='x', is_staff=True)
+
+    def test_requires_staff_login(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/admin/login/', response['Location'])
+
+    def test_shows_counts_but_no_participant_ids(self):
+        self.client.force_login(self.staff)
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        context = response.context
+        self.assertEqual(context['submission_count'], 1)
+        self.assertEqual(context['item9_alerts'], 1)
+        self.assertEqual({b['label']: b['count'] for b in context['phq_bands']}['Moderate'], 1)
+        self.assertContains(response, 'Test Clinic')
+        self.assertNotContains(response, 'SECRET-ID-001')
+
+    def test_wedge_matches_protocol_table_1(self):
+        self.client.force_login(self.staff)
+        wedge = self.client.get('/').context['wedge']
+        for row in wedge:
+            printed = ''.join('I' if c['intervention'] else 'C' for c in row['cells'])
+            self.assertEqual(printed, PROTOCOL_TABLE_1[row['sequence']])
