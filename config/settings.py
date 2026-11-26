@@ -133,6 +133,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Uploaded resources. Not served at a public URL: the resources app serves each file to logged-in staff.
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# The study's own login page (study/access.py); the admin keeps its own at /admin/login/.
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},

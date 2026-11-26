@@ -126,7 +126,7 @@ class DashboardTests(TestCase):
     def test_requires_staff_login(self):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 302)
-        self.assertIn('/admin/login/', response['Location'])
+        self.assertIn('/login/?next=', response['Location'])
 
     def test_shows_counts_but_no_participant_ids(self):
         self.client.force_login(self.staff)
@@ -145,3 +145,41 @@ class DashboardTests(TestCase):
         for row in wedge:
             printed = ''.join('I' if c['intervention'] else 'C' for c in row['cells'])
             self.assertEqual(printed, PROTOCOL_TABLE_1[row['sequence']])
+
+
+class LoginTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        self.staff = User.objects.create_user('staff', password='pass-1234', is_staff=True)
+        self.other = User.objects.create_user('other', password='pass-1234', is_staff=False)
+
+    def test_login_lands_on_the_page_asked_for(self):
+        response = self.client.post('/login/', {'username': 'staff', 'password': 'pass-1234', 'next': '/resources/'})
+        self.assertRedirects(response, '/resources/', fetch_redirect_response=False)
+
+    def test_login_without_next_lands_on_dashboard(self):
+        response = self.client.post('/login/', {'username': 'staff', 'password': 'pass-1234'})
+        self.assertRedirects(response, '/', fetch_redirect_response=False)
+
+    def test_already_logged_in_goes_to_dashboard_not_admin(self):
+        self.client.force_login(self.staff)
+        response = self.client.get('/login/?next=/')
+        self.assertRedirects(response, '/', fetch_redirect_response=False)
+
+    def test_next_cannot_point_to_another_site(self):
+        response = self.client.post('/login/', {'username': 'staff', 'password': 'pass-1234', 'next': 'https://evil.example/'})
+        self.assertRedirects(response, '/', fetch_redirect_response=False)
+
+    def test_non_staff_cannot_log_in_or_see_pages(self):
+        response = self.client.post('/login/', {'username': 'other', 'password': 'pass-1234'})
+        self.assertContains(response, 'does not have access')
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get('/').status_code, 403)
+        self.assertEqual(self.client.get('/resources/').status_code, 403)
+
+    def test_logout_returns_to_login(self):
+        self.client.force_login(self.staff)
+        response = self.client.post('/logout/')
+        self.assertRedirects(response, '/login/', fetch_redirect_response=False)
+        self.assertIn('/login/?next=/', self.client.get('/')['Location'])

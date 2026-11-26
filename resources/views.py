@@ -1,7 +1,6 @@
 import mimetypes
 
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
@@ -11,6 +10,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from study.access import staff_required
 
 from .forms import StudyDocumentForm
 from .models import StudyDocument
@@ -24,7 +25,7 @@ def _permissions(user):
     }
 
 
-@method_decorator(staff_member_required, name='dispatch')
+@method_decorator(staff_required, name='dispatch')
 class DocumentListView(ListView):
     model = StudyDocument
     template_name = 'resources/list.html'
@@ -55,7 +56,7 @@ class DocumentListView(ListView):
         return context
 
 
-@method_decorator(staff_member_required, name='dispatch')
+@method_decorator(staff_required, name='dispatch')
 class DocumentDetailView(DetailView):
     model = StudyDocument
     template_name = 'resources/detail.html'
@@ -67,7 +68,7 @@ class DocumentDetailView(DetailView):
         return context
 
 
-@method_decorator(staff_member_required, name='dispatch')
+@method_decorator(staff_required, name='dispatch')
 class DocumentCreateView(PermissionRequiredMixin, CreateView):
     model = StudyDocument
     form_class = StudyDocumentForm
@@ -83,7 +84,7 @@ class DocumentCreateView(PermissionRequiredMixin, CreateView):
         return reverse('resources:detail', args=[self.object.pk])
 
 
-@method_decorator(staff_member_required, name='dispatch')
+@method_decorator(staff_required, name='dispatch')
 class DocumentUpdateView(PermissionRequiredMixin, UpdateView):
     model = StudyDocument
     form_class = StudyDocumentForm
@@ -105,7 +106,7 @@ class DocumentUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse('resources:detail', args=[self.object.pk])
 
 
-@method_decorator(staff_member_required, name='dispatch')
+@method_decorator(staff_required, name='dispatch')
 class DocumentDeleteView(PermissionRequiredMixin, DeleteView):
     model = StudyDocument
     template_name = 'resources/confirm_delete.html'
@@ -121,7 +122,7 @@ class DocumentDeleteView(PermissionRequiredMixin, DeleteView):
         return super().form_valid(form)
 
 
-@method_decorator(staff_member_required, name='dispatch')
+@method_decorator(staff_required, name='dispatch')
 class DocumentFileView(View):
     """Serve files through the app, to logged-in staff only. Uploads have no public URL.
     as_attachment False shows a PDF in the page; any other type is always downloaded."""

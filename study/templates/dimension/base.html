@@ -17,7 +17,7 @@
     <a href="{{ u_dashboard }}" {% if request.path == u_dashboard %}class="active" aria-current="page"{% endif %}>Dashboard</a>
     <a href="{{ u_resources }}" {% if request.path|slice:":11" == "/resources/" %}class="active" aria-current="page"{% endif %}>Resources</a>
     <a href="/admin/">Admin</a>
-    <form method="post" action="/admin/logout/">{% csrf_token %}<button type="submit">Log out</button></form>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
   </nav>
 </header>
 <div class="banner">Draft system: test data only.{% block banner %}{% endblock %}</div>

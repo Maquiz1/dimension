@@ -38,9 +38,9 @@ class ResourcesTests(TestCase):
         for name in ('resources:list', 'resources:create'):
             response = self.client.get(reverse(name))
             self.assertEqual(response.status_code, 302)
-            self.assertIn('/admin/login/', response['Location'])
+            self.assertIn('/login/?next=', response['Location'])
         response = self.client.get(reverse('resources:download', args=[self.document.pk]))
-        self.assertIn('/admin/login/', response['Location'])
+        self.assertIn('/login/?next=', response['Location'])
 
     def test_list_counts_and_filters(self):
         self.client.force_login(self.viewer)

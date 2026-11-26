@@ -70,6 +70,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .yes { color: var(--teal); font-weight: 600; }
 .flag { color: var(--alert); font-weight: 600; }
 
+/* login */
+body.login-page { background: var(--ink); }
+main.login { min-height: 100vh; max-width: 440px; align-content: center; justify-items: center; }
+.login-card { width: 100%; padding: 32px; }
+.login-card h1 { margin: 4px 0 6px; color: var(--ink); font-size: 26px; }
+.login-card .eyebrow { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--teal); }
+.login-card .field input { width: 100%; padding: 10px 12px; border: 1px solid #B8C6C4; border-radius: 6px; font: inherit; color: var(--ink); }
+.login-card .btn { width: 100%; padding: 11px 16px; margin-top: 4px; }
+main.login > .rng { color: #BFD3D6; }
+
 /* resources */
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; }
 .tab { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--body); text-decoration: none; font-size: 14px; }

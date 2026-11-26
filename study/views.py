@@ -1,6 +1,5 @@
 from datetime import date
 
-from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count, Max, Q
 from django.shortcuts import render
 
@@ -8,6 +7,7 @@ from capture.models import DerivedScore, FormSubmission
 from capture.scoring import GAD_BANDS, PHQ_BANDS
 
 from . import design
+from .access import staff_required
 from .models import Facility, StudyPeriod
 
 FORM_NAMES = {
@@ -35,7 +35,7 @@ def _band_rows(variable, bands):
     ]
 
 
-@staff_member_required
+@staff_required
 def dashboard(request):
     # Explicit order: Django drops Meta.ordering from queries that group by an annotation.
     facilities = list(Facility.objects.annotate(submissions=Count('formsubmission')).order_by('region', 'code'))
