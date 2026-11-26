@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# Back up DIMENSION on the server: database and the code version. Run in /opt/dimension.
+# Back up DIMENSION on the server: database, uploaded Resources files and the code version. Run in /opt/dimension.
 # Also used by deploy-dimension.sh and restore-dimension.sh before they change anything.
 #
 # Usage:  ./backup-dimension.sh [label]        e.g. ./backup-dimension.sh before_import
-# Files:  $BACKUP_DIR/<date>_<label>_db.dump, _commit.txt   (default BACKUP_DIR ~/backups/dimension)
+# Files:  $BACKUP_DIR/<date>_<label>_db.dump, _media.tar.gz, _commit.txt   (default BACKUP_DIR ~/backups/dimension)
 # Old backups are deleted after KEEP_DAYS (default 30). Copy backups off the server regularly.
 #
 # Daily at 01:40 (crontab -e):
@@ -33,6 +33,8 @@ if [ ! -s "${PREFIX}_db.dump" ]; then
     exit 1
 fi
 
+echo "Backing up uploaded files to ${PREFIX}_media.tar.gz ..." >&2
+docker compose run --rm --no-deps -T --entrypoint tar dimension-web czf - -C /app/media . > "${PREFIX}_media.tar.gz"
 git rev-parse HEAD > "${PREFIX}_commit.txt" 2>/dev/null || true
 chmod 600 "${PREFIX}"_*
 

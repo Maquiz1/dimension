@@ -1,0 +1,25 @@
+{% extends "dimension/base.html" %}
+{% block title %}{{ document.title }}{% endblock %}
+{% block content %}
+  <p style="margin:0;"><a href="{% url 'resources:list' %}">← All resources</a></p>
+  <section class="card">
+    <div class="toolbar">
+      <div>
+        <h2 class="page-title">{{ document.title }}{% if document.version %}<span class="badge">{{ document.version }}</span>{% endif %}</h2>
+        <p class="sub" style="margin:4px 0 0;">{{ document.get_category_display }} · {{ document.extension|upper }}{% if document.file_size %}, {{ document.file_size|filesizeformat }}{% endif %} · Updated {{ document.updated_at|date:"j M Y, H:i" }}{% if document.uploaded_by %} by {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}{% endif %}</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="{% url 'resources:download' document.pk %}">Download</a>
+        {% if can_change %}<a class="btn secondary" href="{% url 'resources:update' document.pk %}">Edit or replace</a>{% endif %}
+        {% if can_delete %}<a class="btn secondary" href="{% url 'resources:delete' document.pk %}">Delete</a>{% endif %}
+      </div>
+    </div>
+    {% if document.description %}<p style="margin:16px 0 0;">{{ document.description|linebreaksbr }}</p>{% endif %}
+  </section>
+
+  {% if document.is_pdf %}
+  <iframe class="preview" src="{% url 'resources:preview' document.pk %}" title="Preview of {{ document.title }}"></iframe>
+  {% else %}
+  <section class="card"><p class="pending" style="margin:0;">Only PDFs can be previewed here. Download the file to open it.</p></section>
+  {% endif %}
+{% endblock %}

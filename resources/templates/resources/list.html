@@ -1,0 +1,56 @@
+{% extends "dimension/base.html" %}
+{% block title %}Resources{% endblock %}
+{% block content %}
+  <section>
+    <div class="toolbar">
+      <div>
+        <h2 class="page-title">Resources</h2>
+        <p class="sub" style="margin:2px 0 0;">Study documents for the team: protocol, data collection tools, SOPs, training and meeting materials.</p>
+      </div>
+      {% if can_add %}<a class="btn" href="{% url 'resources:create' %}">Upload a document</a>{% endif %}
+    </div>
+  </section>
+
+  <section class="toolbar">
+    <nav class="tabs" aria-label="Categories">
+      <a class="tab {% if not category %}active{% endif %}" href="?{% if q %}q={{ q|urlencode }}{% endif %}">All<span class="count">{{ total_count }}</span></a>
+      {% for key, label, n in tabs %}
+      <a class="tab {% if category == key %}active{% endif %}" href="?category={{ key }}{% if q %}&amp;q={{ q|urlencode }}{% endif %}">{{ label }}<span class="count">{{ n }}</span></a>
+      {% endfor %}
+    </nav>
+    <form class="search" method="get" role="search">
+      {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+      <input type="search" name="q" value="{{ q }}" placeholder="Search titles and descriptions" aria-label="Search documents">
+      <button class="btn secondary" type="submit">Search</button>
+    </form>
+  </section>
+
+  <section class="doc-list" aria-label="Documents">
+    {% for doc in documents %}
+    <article class="doc">
+      <div class="ext {% if doc.is_pdf %}pdf{% endif %}" aria-hidden="true">{{ doc.extension|default:"file" }}</div>
+      <div>
+        <h3><a href="{% url 'resources:detail' doc.pk %}">{{ doc.title }}</a>{% if doc.version %}<span class="badge">{{ doc.version }}</span>{% endif %}</h3>
+        <div class="meta">{{ doc.get_category_display }} · {{ doc.extension|upper }}{% if doc.file_size %}, {{ doc.file_size|filesizeformat }}{% endif %} · Updated {{ doc.updated_at|date:"j M Y" }}{% if doc.uploaded_by %} by {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.username }}{% endif %}</div>
+        {% if doc.description %}<p class="desc">{{ doc.description|truncatewords:30 }}</p>{% endif %}
+      </div>
+      <div class="actions">
+        {% if doc.is_pdf %}<a class="btn secondary" href="{% url 'resources:detail' doc.pk %}">View</a>{% endif %}
+        <a class="btn" href="{% url 'resources:download' doc.pk %}">Download</a>
+      </div>
+    </article>
+    {% empty %}
+    <div class="card">
+      <p class="pending" style="margin:0;">{% if q or category %}No documents match. <a href="{% url 'resources:list' %}">Show all documents</a>.{% else %}No documents yet.{% if can_add %} <a href="{% url 'resources:create' %}">Upload the first one</a>.{% endif %}{% endif %}</p>
+    </div>
+    {% endfor %}
+  </section>
+
+  {% if is_paginated %}
+  <nav class="pager" aria-label="Pages">
+    {% if page_obj.has_previous %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?{% if query_string %}{{ query_string }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+  </nav>
+  {% endif %}
+{% endblock %}

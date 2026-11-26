@@ -1,0 +1,31 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}DIMENSION{% endblock %} · DIMENSION Study</title>
+<link rel="stylesheet" href="{% static 'dimension/site.css' %}">
+</head>
+<body>
+<header class="site">
+  <div>
+    <h1>DIMENSION Study</h1>
+    <p>Digital mental health training in 20 HIV clinics, Tanzania</p>
+  </div>
+  <nav aria-label="Main">
+    {% url 'dashboard' as u_dashboard %}{% url 'resources:list' as u_resources %}
+    <a href="{{ u_dashboard }}" {% if request.path == u_dashboard %}class="active" aria-current="page"{% endif %}>Dashboard</a>
+    <a href="{{ u_resources }}" {% if request.path|slice:":11" == "/resources/" %}class="active" aria-current="page"{% endif %}>Resources</a>
+    <a href="/admin/">Admin</a>
+    <form method="post" action="/admin/logout/">{% csrf_token %}<button type="submit">Log out</button></form>
+  </nav>
+</header>
+<div class="banner">Draft system: test data only.{% block banner %}{% endblock %}</div>
+<main>
+  {% if messages %}
+  <ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

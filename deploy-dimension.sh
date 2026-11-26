@@ -47,6 +47,9 @@ docker compose run --rm dimension-web python manage.py migrate --plan
 echo "Running database migrations..."
 docker compose run --rm dimension-web python manage.py migrate --noinput
 
+# The uploads volume may have been created as root (for example by the backup above, before this image existed).
+docker compose run --rm --no-deps -T --user root --entrypoint chown dimension-web app:app /app/media
+
 # 4. Switch --------------------------------------------------------------------
 echo "Switching to the new code..."
 docker compose up -d

@@ -15,8 +15,10 @@ COPY . /app/
 RUN DJANGO_SECRET_KEY=build-only POSTGRES_DB=build POSTGRES_USER=build POSTGRES_PASSWORD=build \
     python manage.py collectstatic --noinput
 
-# Run as an unprivileged user.
+# Run as an unprivileged user. media/ is a Docker volume and takes this ownership on first use.
 RUN useradd --system --uid 1000 --home /app app \
+    && mkdir -p media \
+    && chown app:app media \
     && chmod +x docker/entrypoint.sh
 USER app
 

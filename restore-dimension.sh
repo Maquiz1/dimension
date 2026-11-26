@@ -8,6 +8,7 @@
 #   ./restore-dimension.sh 2026-11-02       the newest backup of that day
 #   ./restore-dimension.sh FILE_db.dump     that file
 # Options:
+#   --with-media   also put back the uploaded Resources files from the same backup
 #   --yes          do not ask for confirmation
 #
 # Before restoring, the current state is backed up (label before_restore), so a restore can itself be undone.
@@ -19,9 +20,11 @@ cd "$(dirname "$0")"
 
 BACKUP_DIR="${BACKUP_DIR:-$HOME/backups/dimension}"
 CHOICE=""
+WITH_MEDIA=no
 ASSUME_YES=no
 for arg in "$@"; do
     case "$arg" in
+        --with-media) WITH_MEDIA=yes ;;
         --yes) ASSUME_YES=yes ;;
         -*) echo "Unknown option: $arg" >&2; exit 1 ;;
         *) CHOICE="$arg" ;;
@@ -39,10 +42,10 @@ for i in "${!BACKUPS[@]}"; do
     case "${BACKUPS[$i]}" in *_before_restore_db.dump) ;; *) LATEST=$((i + 1)); break ;; esac
 done
 
-describe() {  # one line per backup: size and code version
-    local file="$1" commit="${1%_db.dump}_commit.txt"
-    printf '%s  (%s%s)' "$(basename "$file")" "$(du -h "$file" | cut -f1)" \
-        "$([ -s "$commit" ] && echo ", code $(cut -c1-7 "$commit")")"
+describe() {  # one line per backup: size, code version and whether files were saved
+    local file="$1" commit="${1%_db.dump}_commit.txt" media="${1%_db.dump}_media.tar.gz"
+    printf '%s  (%s%s%s)' "$(basename "$file")" "$(du -h "$file" | cut -f1)" \
+        "$([ -s "$commit" ] && echo ", code $(cut -c1-7 "$commit")")" "$([ -f "$media" ] && echo ", with files")"
 }
 
 # Pick the backup ------------------------------------------------------------------
@@ -71,6 +74,7 @@ else
     fi
 fi
 COMMIT_FILE="${DUMP%_db.dump}_commit.txt"
+MEDIA="${DUMP%_db.dump}_media.tar.gz"
 
 echo
 echo "Restore: $(describe "$DUMP")"
@@ -78,7 +82,12 @@ if [ -f "$COMMIT_FILE" ] && [ "$(cat "$COMMIT_FILE")" != "$(git rev-parse HEAD 2
     echo "Note: this backup was made with code $(cut -c1-7 "$COMMIT_FILE"); the server now runs $(git rev-parse --short HEAD)."
     echo "      Migrations will bring the database up to the current code after the restore."
 fi
-echo "The database will be replaced: everything entered after this backup is lost."
+[ "$WITH_MEDIA" = yes ] && [ ! -f "$MEDIA" ] && { echo "This backup has no uploaded-files archive." >&2; exit 1; }
+if [ "$WITH_MEDIA" = yes ]; then
+    echo "The database and the uploaded files will be replaced: everything entered after this backup is lost."
+else
+    echo "The database will be replaced: everything entered after this backup is lost (uploaded files are kept)."
+fi
 if [ "$ASSUME_YES" != yes ]; then
     read -r -p "Continue? [y/N] " answer
     [ "${answer,,}" = y ] || [ "${answer,,}" = yes ] || { echo "Stopped. Nothing was changed."; exit 0; }
@@ -96,6 +105,12 @@ trap restart EXIT
 echo "Restoring the database (all or nothing: on an error the database stays as it was) ..."
 docker compose exec -T dimension-db sh -c 'pg_restore --clean --if-exists --no-owner --single-transaction --exit-on-error -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
     < "$DUMP"
+
+if [ "$WITH_MEDIA" = yes ]; then
+    echo "Restoring uploaded files ..."
+    docker compose run --rm --no-deps -T --entrypoint sh dimension-web -c \
+        'find /app/media -mindepth 1 -delete && tar xzf - -C /app/media' < "$MEDIA"
+fi
 
 echo "Bringing the database up to the current code ..."
 docker compose run --rm dimension-web python manage.py migrate --noinput | tail -n 3

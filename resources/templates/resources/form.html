@@ -1,0 +1,24 @@
+{% extends "dimension/base.html" %}
+{% block title %}{% if object %}Edit {{ object.title }}{% else %}Upload a document{% endif %}{% endblock %}
+{% block content %}
+  <p style="margin:0;"><a href="{% if object %}{% url 'resources:detail' object.pk %}{% else %}{% url 'resources:list' %}{% endif %}">← Back</a></p>
+  <section class="card" style="max-width:760px;">
+    <h2 class="page-title" style="margin-bottom:18px;">{% if object %}Edit or replace “{{ object.title }}”{% else %}Upload a document{% endif %}</h2>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<ul class="messages"><li class="error">{{ form.non_field_errors|join:" " }}</li></ul>{% endif %}
+      {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if not field.field.required %} <span class="rng">(optional)</span>{% endif %}</label>
+        {{ field }}
+        {% if field.help_text %}<span class="help">{{ field.help_text }}</span>{% endif %}
+        {{ field.errors }}
+      </div>
+      {% endfor %}
+      <div class="actions">
+        <button class="btn" type="submit">{% if object %}Save changes{% else %}Upload{% endif %}</button>
+        <a class="btn secondary" href="{% if object %}{% url 'resources:detail' object.pk %}{% else %}{% url 'resources:list' %}{% endif %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

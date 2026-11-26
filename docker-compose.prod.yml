@@ -27,6 +27,8 @@ services:
     volumes:
       # Not in git or in the image. Copy it with copy-dictionary-to-server.sh.
       - ./data_dictionary:/app/data_dictionary:ro
+      # Documents uploaded under Resources. Backed up by backup-dimension.sh.
+      - media:/app/media
     depends_on:
       - dimension-db
     ports:
@@ -35,3 +37,4 @@ services:
 
 volumes:
   postgres_data:
+  media:
