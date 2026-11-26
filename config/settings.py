@@ -152,7 +152,7 @@ if not DEBUG:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Single source for variables, codes and the confirmed site list.
-DATA_DICTIONARY_PATH = BASE_DIR / 'data_dictionary' / 'DIMENSION_Data_Dictionary_v0.3.xlsx'
+DATA_DICTIONARY_PATH = BASE_DIR / 'data_dictionary' / 'DIMENSION_Data_Dictionary_v0.4.xlsx'
 
 # ODK Central, used by the pull_odk command.
 ODK_URL = os.environ.get('ODK_URL', '')

@@ -58,14 +58,20 @@ class AllocationTests(TestCase):
 
 @skipUnless(settings.DATA_DICTIONARY_PATH.exists(), 'Data dictionary is not in git.')
 class LoadSitesTests(TestCase):
-    def test_loads_confirmed_list_without_allocation(self):
+    def test_loads_confirmed_list_with_agreed_allocation(self):
         call_command('load_sites', stdout=StringIO())
         self.assertEqual(Facility.objects.count(), 20)
         self.assertEqual(Facility.objects.filter(region='Dar es Salaam').count(), 14)
         self.assertEqual(Facility.objects.filter(region='Mwanza').count(), 6)
         self.assertEqual(Facility.objects.filter(has_mental_health_unit=True).count(), 4)
-        self.assertFalse(Facility.objects.exclude(sequence=None).exists())
         self.assertEqual(Facility.objects.get(name='Amana').district, 'Ilala')
+        # Stratified allocation agreed by the study team on 26 November 2026 (dictionary v0.4, D07)
+        for sequence in range(1, 6):
+            clinics = Facility.objects.filter(sequence=sequence)
+            self.assertEqual(clinics.count(), 4, sequence)
+            self.assertTrue(clinics.filter(region='Mwanza').exists(), sequence)
+        self.assertEqual(Facility.objects.get(name='Sekou-Toure RRH').sequence, 1)
+        self.assertEqual(Facility.objects.get(name='Buzuruga').sequence, 5)
 
     def test_repeat_load_is_safe(self):
         call_command('load_sites', stdout=StringIO())

@@ -9,7 +9,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-FILE=data_dictionary/DIMENSION_Data_Dictionary_v0.3.xlsx
+FILE=data_dictionary/DIMENSION_Data_Dictionary_v0.4.xlsx
 SERVER="${1:-root@31.97.187.66}"
 REMOTE_DIR=/opt/dimension/data_dictionary
 

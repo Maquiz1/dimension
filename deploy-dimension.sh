@@ -55,7 +55,7 @@ echo "Switching to the new code..."
 docker compose up -d
 
 if [ "${1:-}" = "--first" ]; then
-    if [ -s data_dictionary/DIMENSION_Data_Dictionary_v0.3.xlsx ]; then
+    if [ -s data_dictionary/DIMENSION_Data_Dictionary_v0.4.xlsx ]; then
         echo "First deployment: loading the clinics..."
         docker compose exec -T dimension-web python manage.py load_sites
     else
