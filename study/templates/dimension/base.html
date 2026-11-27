@@ -4,28 +4,33 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}DIMENSION{% endblock %} · DIMENSION Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="{% static 'dimension/site.css' %}">
 </head>
-<body>
-<header class="site">
-  <div>
-    <h1>DIMENSION Study</h1>
-    <p>Digital mental health training in 20 HIV clinics, Tanzania</p>
+<body class="app">
+{% include "dimension/_sidebar.html" %}
+<div class="shell">
+  {% include "dimension/_navbar.html" %}
+  <div class="banner">Draft system: test data only.{% block banner %}{% endblock %}</div>
+  <main>
+    {% if messages %}
+    <ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  {% include "dimension/_footer.html" %}
+</div>
+
+<dialog class="timeout" id="sessionTimeout" aria-labelledby="sessionTimeoutTitle">
+  <h2 id="sessionTimeoutTitle"><i class="fas fa-clock"></i> Session expiring soon</h2>
+  <p>For participants’ privacy, you will be logged out in <strong id="sessionCountdown">300</strong> seconds.</p>
+  <div class="actions">
+    <button type="button" class="btn" id="staySignedIn">Stay logged in</button>
+    <button type="button" class="btn secondary" id="logoutNow">Log out now</button>
   </div>
-  <nav aria-label="Main">
-    {% url 'dashboard' as u_dashboard %}{% url 'resources:list' as u_resources %}
-    <a href="{{ u_dashboard }}" {% if request.path == u_dashboard %}class="active" aria-current="page"{% endif %}>Dashboard</a>
-    <a href="{{ u_resources }}" {% if request.path|slice:":11" == "/resources/" %}class="active" aria-current="page"{% endif %}>Resources</a>
-    <a href="/admin/">Admin</a>
-    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
-  </nav>
-</header>
-<div class="banner">Draft system: test data only.{% block banner %}{% endblock %}</div>
-<main>
-  {% if messages %}
-  <ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
-  {% endif %}
-  {% block content %}{% endblock %}
-</main>
+</dialog>
+<script src="{% static 'dimension/site.js' %}" data-logout-url="{% url 'logout' %}" data-login-url="{% url 'login' %}" data-csrf="{{ csrf_token }}" defer></script>
 </body>
 </html>

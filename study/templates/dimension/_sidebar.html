@@ -1,0 +1,35 @@
+{% url 'dashboard' as u_dashboard %}{% url 'resources:list' as u_resources %}{% url 'presentation' as u_presentation %}
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+  <a href="{{ u_dashboard }}" class="sb-brand">
+    <span class="sb-mark" aria-hidden="true"><i class="fas fa-brain"></i></span>
+    <span class="sb-brand-text">DIMENSION<small>Study data system</small></span>
+  </a>
+
+  <nav class="sb-scroll">
+    <a href="{{ u_dashboard }}" class="sb-link{% if request.path == u_dashboard %} active{% endif %}"{% if request.path == u_dashboard %} aria-current="page"{% endif %}>
+      <i class="fas fa-house"></i><span>Dashboard</span>
+    </a>
+
+    <div class="sb-label">Study</div>
+    <a href="{% url 'admin:study_facility_changelist' %}" class="sb-link"><i class="fas fa-hospital"></i><span>Clinics</span><i class="fas fa-arrow-up-right-from-square sb-ext" title="Opens in the admin"></i></a>
+    <a href="{% url 'admin:study_studyperiod_changelist' %}" class="sb-link"><i class="fas fa-calendar-days"></i><span>Study periods</span><i class="fas fa-arrow-up-right-from-square sb-ext" title="Opens in the admin"></i></a>
+    <a href="{% url 'admin:capture_formsubmission_changelist' %}" class="sb-link"><i class="fas fa-file-medical"></i><span>Form submissions</span>{% if nav_alerts.review_count %}<span class="sb-count amber" title="Flagged for review">{{ nav_alerts.review_count }}</span>{% endif %}</a>
+
+    <div class="sb-label">Resources</div>
+    <a href="{{ u_resources }}" class="sb-link{% if request.path|slice:':11' == '/resources/' %} active{% endif %}"><i class="fas fa-folder-open"></i><span>Documents</span></a>
+    <a href="{{ u_presentation }}" class="sb-link"><i class="fas fa-person-chalkboard"></i><span>Presentation</span></a>
+
+    {% if user.is_superuser %}
+    <div class="sb-label">Administration</div>
+    <a href="{% url 'admin:auth_user_changelist' %}" class="sb-link"><i class="fas fa-users-gear"></i><span>Users</span><i class="fas fa-arrow-up-right-from-square sb-ext" title="Opens in the admin"></i></a>
+    <a href="https://odk.tamris.org/" class="sb-link" target="_blank" rel="noopener"><i class="fas fa-tablet-screen-button"></i><span>ODK Central</span><i class="fas fa-arrow-up-right-from-square sb-ext" title="Opens in a new tab"></i></a>
+    <a href="{% url 'admin:index' %}" class="sb-link"><i class="fas fa-shield-halved"></i><span>Django admin</span><i class="fas fa-arrow-up-right-from-square sb-ext" title="Opens in the admin"></i></a>
+    {% endif %}
+  </nav>
+
+  <div class="sb-user">
+    <span class="sb-avatar" aria-hidden="true">{% firstof user.first_name|slice:":1"|upper user.username|slice:":1"|upper %}</span>
+    <span class="sb-user-text">{% firstof user.get_full_name user.username %}<small>{% if user.is_superuser %}Administrator{% else %}Study staff{% endif %}</small></span>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="sb-logout" title="Log out" aria-label="Log out"><i class="fas fa-right-from-bracket"></i></button></form>
+  </div>
+</aside>

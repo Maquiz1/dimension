@@ -1,0 +1,173 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study progress · DIMENSION Study</title>
+<script>try { if (localStorage.getItem('dimension-presentation-theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (e) {}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root { color-scheme: light; --bg: #F6F4EE; --surface: #FFFFFF; --card: #E6EDEB; --line: #DCE3E1; --ink: #14303A; --body: #3D5560; --muted: #6A7F88;
+          --teal: #1F5F6B; --teal-soft: #D4E6E6; --amber: #E3A23B; --alert: #A8432E; }
+  :root[data-theme="dark"] { color-scheme: dark; --bg: #0F252D; --surface: #14303A; --card: #1C3E49; --line: rgba(255,255,255,.12); --ink: #F6F4EE; --body: #C9DAD8; --muted: #93ACB1;
+          --teal: #5FB3BF; --teal-soft: #234C57; --amber: #E8B04F; --alert: #E58A74; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { font: 16px/1.5 "Public Sans", system-ui, sans-serif; background: var(--bg); color: var(--body); display: flex; flex-direction: column; }
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--amber); transition: width .25s; z-index: 5; }
+  .topbar { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-family: "Source Serif 4", Georgia, serif; font-weight: 700; font-size: 18px; text-decoration: none; white-space: nowrap; }
+  .brand i { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: linear-gradient(135deg, #1F5F6B, #E3A23B); color: #FFF; font-size: 15px; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; flex: 1; }
+  .tabs button { flex: 0 0 auto; border: 1px solid var(--line); background: transparent; color: var(--muted); font: 600 13px/1 inherit; padding: 8px 11px; border-radius: 8px; cursor: pointer; }
+  .tabs button.on { background: var(--teal); border-color: var(--teal); color: #FFF; }
+  .tool { border: 1px solid var(--line); background: transparent; color: var(--body); width: 38px; height: 38px; border-radius: 9px; cursor: pointer; }
+  .tool:hover { color: var(--teal); border-color: var(--teal); }
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 20px; }
+  .slide { display: none; width: 100%; max-width: 1100px; }
+  .slide.on { display: block; animation: in .35s ease; }
+  @keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .kicker { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, serif; color: var(--ink); margin: 0 0 14px; line-height: 1.1; }
+  h1 { font-size: clamp(40px, 6vw, 68px); }
+  h1 span { color: var(--amber); }
+  h2 { font-size: clamp(28px, 3.6vw, 42px); }
+  .lead { font-size: clamp(16px, 1.7vw, 20px); max-width: 780px; margin: 0 0 26px; }
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .stat, .card { background: var(--card); border-top: 5px solid var(--teal); border-radius: 12px; padding: 20px 22px; }
+  .stat.alert { border-top-color: var(--alert); }
+  .stat .v { font-family: "Source Serif 4", Georgia, serif; font-size: clamp(32px, 4vw, 48px); font-weight: 700; color: var(--ink); line-height: 1; }
+  .stat .l { margin-top: 8px; font-size: 15px; }
+  .card h3 { margin: 0 0 6px; color: var(--ink); font-size: 18px; }
+  .card p { margin: 0; }
+  .cover, .end { background: #14303A; color: #C9DAD8; border-radius: 18px; padding: clamp(28px, 5vw, 56px); }
+  .cover h1, .end h1 { color: #F6F4EE; } .cover .kicker, .end .kicker { color: #E3A23B; }
+  .cover .stat { background: #1E4450; border-top-color: #E3A23B; } .cover .stat .v { color: #F6F4EE; }
+  .wedge { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 15px; }
+  .wedge th { color: var(--muted); font-weight: 700; padding: 4px 6px; text-align: center; }
+  .wedge th:first-child, .wedge th:last-child { text-align: left; }
+  .wedge td.c, .wedge td.i { text-align: center; font-weight: 700; padding: 10px 4px; border-radius: 4px; }
+  .wedge td.c { background: var(--teal-soft); color: var(--teal); } .wedge td.i { background: var(--amber); color: #3A2A08; }
+  .wedge td.now { outline: 3px solid var(--ink); }
+  .wedge td.seq { font-weight: 700; color: var(--ink); font-size: 18px; padding-right: 8px; }
+  .wedge td.clinics { font-size: 14px; padding-left: 10px; }
+  .bars .row { display: grid; grid-template-columns: 190px 1fr 40px; gap: 10px; align-items: center; margin: 10px 0; }
+  .bars .track { height: 16px; background: var(--teal-soft); border-radius: 4px; overflow: hidden; }
+  .bars .fill { height: 100%; background: var(--teal); }
+  .bars .n { font-weight: 700; color: var(--ink); text-align: right; }
+  .rng { color: var(--muted); font-size: 13px; }
+  .asof { margin-top: 18px; font-size: 13px; color: var(--muted); }
+  .cover .asof, .end .asof { color: #93ACB1; }
+  .bottombar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 20px; border-top: 1px solid var(--line); font-size: 14px; flex-wrap: wrap; }
+  .nav { display: flex; gap: 8px; }
+  .nav button, .dl { border: 1px solid var(--line); background: transparent; color: var(--body); font: 600 14px/1 inherit; padding: 9px 13px; border-radius: 8px; cursor: pointer; text-decoration: none; }
+  .nav button#next { background: var(--teal); border-color: var(--teal); color: #FFF; }
+  .keys { display: flex; gap: 8px; }
+  @media (max-width: 760px) { .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g2 { grid-template-columns: minmax(0, 1fr); } main { align-items: flex-start; } .bars .row { grid-template-columns: 130px 1fr 32px; } }
+  @media print {
+    @page { size: A4 landscape; margin: 12mm; }
+    .topbar, .bottombar, .progress { display: none; }
+    body { background: #FFF; display: block; }
+    main { display: block; padding: 0; }
+    .slide { display: block !important; page-break-after: always; break-after: page; animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<header class="topbar">
+  <a class="brand" href="{% url 'dashboard' %}" title="Back to the dashboard"><i class="fas fa-brain"></i>DIMENSION</a>
+  <nav class="tabs" id="tabs" aria-label="Slides"></nav>
+  <button class="tool" id="theme" title="Dark mode" aria-label="Switch light or dark"><i class="fas fa-moon"></i></button>
+  <button class="tool" id="fullscreen" title="Full screen (F)" aria-label="Full screen"><i class="fas fa-expand"></i></button>
+</header>
+
+<main>
+  {% for s in deck.slides %}
+  <section class="slide" data-title="{{ s.nav }}">
+    {% if s.type == 'cover' or s.type == 'end' %}
+    <div class="{{ s.type }}">
+      <div class="kicker">{{ s.kicker }}</div>
+      <h1>{{ s.title }}{% if s.subtitle %}<br><span>{{ s.subtitle }}</span>{% endif %}</h1>
+      <p class="lead" style="color:#C9DAD8;">{{ s.lead }}</p>
+      {% if s.stats %}<div class="grid g3">{% for st in s.stats %}<div class="stat"><div class="v">{{ st.value }}</div><div class="l">{{ st.label }}</div></div>{% endfor %}</div>{% endif %}
+      <div class="asof">As of {{ deck.asof|date:"j F Y, H:i" }} · draft system, test data only</div>
+    </div>
+    {% else %}
+    <div class="kicker">{{ s.kicker }}</div>
+    <h2>{{ s.title }}</h2>
+    {% if s.lead %}<p class="lead">{{ s.lead }}</p>{% endif %}
+
+    {% if s.type == 'cards' %}
+    <div class="grid g2">{% for c in s.cards %}<div class="card"><h3>{{ c.title }}</h3><p>{{ c.text }}</p></div>{% endfor %}</div>
+    {% elif s.type == 'stats' %}
+    <div class="grid {% if s.stats|length >= 4 %}g4{% elif s.stats|length == 3 %}g3{% else %}g2{% endif %}">{% for st in s.stats %}<div class="stat{% if st.alert %} alert{% endif %}"><div class="v">{{ st.value }}</div><div class="l">{{ st.label }}</div></div>{% endfor %}</div>
+    {% elif s.type == 'wedge' %}
+    <div style="overflow-x:auto;"><table class="wedge">
+      <thead><tr><th>Sequence</th>{% for p in s.periods %}<th>P{{ p }}</th>{% endfor %}<th>Clinics</th></tr></thead>
+      <tbody>{% for row in s.rows %}<tr><td class="seq">{{ row.sequence }}</td>{% for c in row.cells %}<td class="{% if c.intervention %}i{% else %}c{% endif %}{% if c.period == s.current_period %} now{% endif %}">{% if c.intervention %}I{% else %}C{% endif %}</td>{% endfor %}<td class="clinics">{{ row.clinics|join:", "|default:"Awaiting allocation" }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% elif s.type == 'bars' %}
+    <div class="grid g2">{% for chart in s.charts %}<div class="card bars"><h3>{{ chart.title }}</h3>
+      {% for r in chart.rows %}<div class="row"><span>{{ r.label }} <span class="rng">{{ r.range }}</span></span><div class="track"><div class="fill" style="width:{{ r.width }}%"></div></div><span class="n">{{ r.count }}</span></div>{% endfor %}
+    </div>{% endfor %}</div>
+    {% endif %}
+    <div class="asof">As of {{ deck.asof|date:"j F Y, H:i" }}</div>
+    {% endif %}
+  </section>
+  {% endfor %}
+</main>
+
+<footer class="bottombar">
+  <span id="counter"></span>
+  <div class="nav">
+    <button id="prev" aria-label="Previous slide"><i class="fas fa-arrow-left"></i></button>
+    <button id="next" aria-label="Next slide">Next <i class="fas fa-arrow-right"></i></button>
+  </div>
+  <span class="keys">
+    <a class="dl" href="{% url 'dashboard' %}"><i class="fas fa-arrow-left"></i> Dashboard</a>
+    <a class="dl" href="{% url 'presentation-pptx' %}"><i class="far fa-file-powerpoint"></i> PowerPoint</a>
+    <button class="dl" type="button" onclick="window.print()"><i class="far fa-file-pdf"></i> Print / PDF</button>
+  </span>
+</footer>
+
+<script>
+(function () {
+  var slides = Array.from(document.querySelectorAll('.slide'));
+  var tabs = document.getElementById('tabs'), counter = document.getElementById('counter'), progress = document.getElementById('progress');
+  var i = 0;
+  slides.forEach(function (s, n) {
+    var b = document.createElement('button'); b.textContent = s.dataset.title; b.addEventListener('click', function () { go(n); }); tabs.appendChild(b);
+  });
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, k) { s.classList.toggle('on', k === i); tabs.children[k].classList.toggle('on', k === i); });
+    tabs.children[i].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    counter.textContent = (i + 1) + ' / ' + slides.length;
+    progress.style.width = ((i + 1) * 100 / slides.length) + '%';
+    try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
+  }
+  document.getElementById('prev').addEventListener('click', function () { go(i - 1); });
+  document.getElementById('next').addEventListener('click', function () { go(i + 1); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(i + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(i - 1); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(slides.length - 1);
+    if (e.key === 'f' || e.key === 'F') full();
+  });
+  function full() { if (document.fullscreenElement) document.exitFullscreen(); else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }
+  document.getElementById('fullscreen').addEventListener('click', full);
+  document.getElementById('theme').addEventListener('click', function () {
+    var dark = document.documentElement.dataset.theme !== 'dark';
+    if (dark) document.documentElement.dataset.theme = 'dark'; else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem('dimension-presentation-theme', dark ? 'dark' : 'light'); } catch (e) {}
+  });
+  go((parseInt(location.hash.slice(1), 10) || 1) - 1);
+})();
+</script>
+</body>
+</html>

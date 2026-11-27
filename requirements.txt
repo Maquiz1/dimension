@@ -6,3 +6,4 @@ requests>=2.32,<3
 pyxform>=3,<5
 gunicorn>=23,<24
 whitenoise>=6.9,<7
+python-pptx>=1.0.2,<2

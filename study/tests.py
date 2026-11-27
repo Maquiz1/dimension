@@ -183,3 +183,58 @@ class LoginTests(TestCase):
         response = self.client.post('/logout/')
         self.assertRedirects(response, '/login/', fetch_redirect_response=False)
         self.assertIn('/login/?next=/', self.client.get('/')['Location'])
+
+
+class LayoutAndPresentationTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        from capture.ingest import ingest_record
+
+        Facility.objects.create(
+            code='T01', name='Test Clinic', facility_type='Dispensary', ward='W', clients=1,
+            region='Mwanza', district='D', selection_method='M', has_mental_health_unit=True, sequence=2,
+        )
+        record = {f'phq_{i:02d}': '1' for i in range(1, 10)}
+        record.update({'__id': 'uuid:1', 'study_id': 'SECRET-ID-002', 'facility_code': 'T01', 'visit_date': '2027-07-01'})
+        ingest_record('dim_5p_phq9', record)   # item 9 = 1: one safety alert
+        self.staff = User.objects.create_user('staff', password='x', is_staff=True)
+        self.admin = User.objects.create_superuser('boss', 'b@x.org', 'x')
+
+    def test_sidebar_navbar_and_footer(self):
+        self.client.force_login(self.staff)
+        html = self.client.get('/').content.decode()
+        for text in ('Study data system', 'href="/resources/"', 'href="/presentation/"', 'National Institute for Medical Research', 'sessionTimeout'):
+            self.assertIn(text, html)
+        self.assertIn('1 PHQ-9 item 9 safety alert', html)   # the bell
+        self.assertNotIn('Django admin', html)               # administration is for superusers only
+        self.client.force_login(self.admin)
+        self.assertIn('Django admin', self.client.get('/').content.decode())
+
+    def test_idle_sessions_end_after_30_minutes(self):
+        from django.conf import settings
+        self.assertEqual(settings.SESSION_COOKIE_AGE, 30 * 60)
+        self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)
+
+    def test_presentation_is_staff_only_and_has_no_participant_ids(self):
+        self.assertIn('/login/?next=', self.client.get('/presentation/')['Location'])
+        self.client.force_login(self.staff)
+        response = self.client.get('/presentation/')
+        self.assertEqual(len(response.context['deck']['slides']), 8)
+        self.assertContains(response, 'Test Clinic')
+        self.assertNotContains(response, 'SECRET-ID-002')
+
+    def test_powerpoint_download(self):
+        from io import BytesIO
+
+        from pptx import Presentation
+
+        self.client.force_login(self.staff)
+        response = self.client.get('/presentation/download.pptx')
+        self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
+        self.assertIn('attachment', response['Content-Disposition'])
+        deck = Presentation(BytesIO(response.content))
+        self.assertEqual(len(deck.slides), 8)
+        text = ' '.join(sh.text_frame.text for sl in deck.slides for sh in sl.shapes if sh.has_text_frame)
+        self.assertIn('Stepped-wedge rollout', text)
+        self.assertNotIn('SECRET-ID-002', text)

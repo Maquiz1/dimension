@@ -1,0 +1,43 @@
+<header class="topbar">
+  <div class="tb-left">
+    <button type="button" class="tb-icon" id="sidebarToggle" aria-label="Show or hide the menu" aria-controls="sidebar"><i class="fas fa-bars"></i></button>
+    <span class="tb-title">{% block page_title %}{% endblock %}</span>
+  </div>
+
+  <div class="tb-right">
+    <div class="tb-dropdown">
+      <button type="button" class="tb-icon" data-menu="alertsMenu" aria-haspopup="true" aria-expanded="false" aria-label="Alerts{% if nav_alert_total %} ({{ nav_alert_total }}){% endif %}">
+        <i class="fas fa-bell"></i>{% if nav_alert_total %}<span class="tb-badge">{% if nav_alert_total > 99 %}99+{% else %}{{ nav_alert_total }}{% endif %}</span>{% endif %}
+      </button>
+      <div class="tb-menu tb-menu-wide" id="alertsMenu" hidden>
+        <div class="tb-menu-head">Alerts</div>
+        {% if nav_alerts.item9_alerts %}
+        <a class="tb-item" href="{% url 'admin:capture_derivedscore_changelist' %}?variable=phq_item9_alert&amp;number_value=1">
+          <span class="tb-dot red"></span><span>{{ nav_alerts.item9_alerts }} PHQ-9 item 9 safety alert{{ nav_alerts.item9_alerts|pluralize }}<small>Thoughts of death or self-harm: check the referral was made</small></span>
+        </a>
+        {% endif %}
+        {% if nav_alerts.review_count %}
+        <a class="tb-item" href="{% url 'admin:capture_formsubmission_changelist' %}?needs_review__exact=1">
+          <span class="tb-dot amber"></span><span>{{ nav_alerts.review_count }} record{{ nav_alerts.review_count|pluralize }} flagged for review<small>Missing or invalid answers</small></span>
+        </a>
+        {% endif %}
+        {% if not nav_alert_total %}<div class="tb-empty"><i class="fas fa-bell-slash"></i>Nothing needs attention</div>{% endif %}
+      </div>
+    </div>
+
+    <div class="tb-dropdown">
+      <button type="button" class="tb-profile" data-menu="profileMenu" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+        <span class="tb-avatar" aria-hidden="true">{% firstof user.first_name|slice:":1"|upper user.username|slice:":1"|upper %}</span>
+        <span class="tb-profile-text">{% firstof user.first_name user.username %}<small>{% if user.is_superuser %}Administrator{% else %}Study staff{% endif %}</small></span>
+        <i class="fas fa-chevron-down tb-caret" aria-hidden="true"></i>
+      </button>
+      <div class="tb-menu" id="profileMenu" hidden>
+        <div class="tb-menu-user"><span class="tb-avatar lg" aria-hidden="true">{% firstof user.first_name|slice:":1"|upper user.username|slice:":1"|upper %}</span>
+          <span><strong>{% firstof user.get_full_name user.username %}</strong><small>{{ user.email|default:user.username }}</small></span></div>
+        <a class="tb-item" href="{% url 'dashboard' %}"><i class="fas fa-house"></i><span>Dashboard</span></a>
+        <a class="tb-item" href="{% url 'admin:password_change' %}"><i class="fas fa-key"></i><span>Change password</span></a>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="tb-item tb-logout"><i class="fas fa-right-from-bracket"></i><span>Log out</span></button></form>
+      </div>
+    </div>
+  </div>
+</header>

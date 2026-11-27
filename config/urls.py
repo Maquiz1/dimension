@@ -19,7 +19,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
 from study.access import StudyLoginView
-from study.views import dashboard
+from study.views import dashboard, presentation, presentation_pptx
 
 admin.site.site_header = 'DIMENSION Study administration'
 admin.site.site_title = 'DIMENSION admin'
@@ -27,6 +27,8 @@ admin.site.index_title = 'Data management'
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
+    path('presentation/', presentation, name='presentation'),
+    path('presentation/download.pptx', presentation_pptx, name='presentation-pptx'),
     path('login/', StudyLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('resources/', include('resources.urls')),
