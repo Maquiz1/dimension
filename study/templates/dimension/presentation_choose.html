@@ -1,0 +1,38 @@
+{% extends "dimension/base.html" %}
+{% block title %}Presentation{% endblock %}
+{% block content %}
+  <section>
+    <h2 class="page-title">Choose what to present</h2>
+    <p class="sub" style="margin:4px 0 0;">Each presentation always shows its latest version. To update one, replace its file in Resources with <b>Edit or replace</b>.</p>
+  </section>
+
+  <section class="deck-list">
+    <article class="deck-card live">
+      <div class="deck-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></div>
+      <div class="deck-body">
+        <h3>Live study progress</h3>
+        <p class="meta">Built from the system’s data at the moment you open it: clinics, rollout, forms received, severity and safety alerts.</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="{% url 'presentation-live' %}"><i class="fas fa-play"></i> Present</a>
+        <a class="btn secondary" href="{% url 'presentation-pptx' %}"><i class="far fa-file-powerpoint"></i> PowerPoint</a>
+      </div>
+    </article>
+
+    {% for deck in decks %}
+    <article class="deck-card">
+      <div class="deck-icon" aria-hidden="true"><i class="fas fa-person-chalkboard"></i></div>
+      <div class="deck-body">
+        <h3>{{ deck.title }}{% if deck.slides.version %}<span class="badge">{{ deck.slides.version }}</span>{% endif %}</h3>
+        <p class="meta">{% if deck.description %}{{ deck.description }} · {% endif %}Updated {{ deck.slides.updated_at|date:"j M Y" }}</p>
+      </div>
+      <div class="actions">
+        {% if deck.slides.is_pdf %}<a class="btn" href="{% url 'slideshow' deck.key %}"><i class="fas fa-play"></i> Present</a>{% else %}<span class="pending">The slides in Resources are not a PDF</span>{% endif %}
+        {% if deck.notes %}<a class="btn secondary" href="{% url 'resources:detail' deck.notes.pk %}"><i class="far fa-note-sticky"></i> Speaker notes</a>{% endif %}
+        <a class="btn secondary" href="{% url 'resources:detail' deck.slides.pk %}"><i class="fas fa-folder-open"></i> In Resources</a>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+  {% if not decks %}<p class="pending">No other presentations yet. An administrator can add one in Django admin › Slide decks.</p>{% endif %}
+{% endblock %}

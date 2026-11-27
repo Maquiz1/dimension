@@ -17,7 +17,7 @@
 
     <div class="sb-label">Resources</div>
     <a href="{{ u_resources }}" class="sb-link{% if request.path|slice:':11' == '/resources/' %} active{% endif %}"><i class="fas fa-folder-open"></i><span>Documents</span></a>
-    <a href="{{ u_presentation }}" class="sb-link"><i class="fas fa-person-chalkboard"></i><span>Presentation</span></a>
+    <a href="{{ u_presentation }}" class="sb-link{% if request.path|slice:':14' == '/presentation/' %} active{% endif %}"><i class="fas fa-person-chalkboard"></i><span>Presentation</span></a>
 
     {% if user.is_superuser %}
     <div class="sb-label">Administration</div>

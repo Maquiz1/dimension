@@ -217,9 +217,9 @@ class LayoutAndPresentationTests(TestCase):
         self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)
 
     def test_presentation_is_staff_only_and_has_no_participant_ids(self):
-        self.assertIn('/login/?next=', self.client.get('/presentation/')['Location'])
+        self.assertIn('/login/?next=', self.client.get('/presentation/live/')['Location'])
         self.client.force_login(self.staff)
-        response = self.client.get('/presentation/')
+        response = self.client.get('/presentation/live/')
         self.assertEqual(len(response.context['deck']['slides']), 8)
         self.assertContains(response, 'Test Clinic')
         self.assertNotContains(response, 'SECRET-ID-002')
@@ -230,7 +230,7 @@ class LayoutAndPresentationTests(TestCase):
         from pptx import Presentation
 
         self.client.force_login(self.staff)
-        response = self.client.get('/presentation/download.pptx')
+        response = self.client.get('/presentation/live/download.pptx')
         self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
         self.assertIn('attachment', response['Content-Disposition'])
         deck = Presentation(BytesIO(response.content))

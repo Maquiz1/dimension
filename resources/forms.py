@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import ALLOWED_EXTENSIONS, MAX_UPLOAD_MB, StudyDocument
+from .models import ALLOWED_EXTENSIONS, MAX_UPLOAD_MB, SlideDeck, StudyDocument
 
 
 class StudyDocumentForm(forms.ModelForm):
@@ -22,6 +22,13 @@ class StudyDocumentForm(forms.ModelForm):
             f'PDF, Word, PowerPoint, Excel, OpenDocument, CSV or text, up to {MAX_UPLOAD_MB} MB.'
             + (' Leave empty to keep the current file.' if self.instance.pk else '')
         )
+
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        replacing = self.instance.pk and file and file != self.instance.file
+        if replacing and not file.name.lower().endswith('.pdf') and SlideDeck.objects.filter(slides=self.instance).exists():
+            raise forms.ValidationError('This document is used as a presentation, so its replacement must be a PDF.')
+        return file
 
     def clean_title(self):
         title = self.cleaned_data['title'].strip()

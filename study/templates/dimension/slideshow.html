@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ deck.title }} · DIMENSION Study</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #0F252D; color: #C9DAD8; font: 15px/1.4 "Public Sans", system-ui, sans-serif; display: flex; flex-direction: column; }
+  .bar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #14303A; transition: opacity .3s; }
+  .bar .title { flex: 1; min-width: 0; color: #F6F4EE; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar .version { color: #E3A23B; font-weight: 600; margin-left: 6px; }
+  .bar a, .bar button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,.18); background: transparent; color: #F6F4EE; font: 600 13px/1 inherit; padding: 8px 11px; border-radius: 8px; cursor: pointer; text-decoration: none; }
+  .bar a:hover, .bar button:hover { background: rgba(255,255,255,.08); }
+  #counter { min-width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  canvas { display: block; box-shadow: 0 20px 60px rgba(0,0,0,.5); background: #FFF; }
+  .zone { position: absolute; top: 0; bottom: 0; width: 30%; cursor: pointer; }
+  .zone.prev { left: 0; } .zone.next { right: 0; }
+  .message { position: absolute; color: #C9DAD8; text-align: center; padding: 20px; }
+  :fullscreen .bar { opacity: 0; } :fullscreen .bar:hover { opacity: 1; }
+  :fullscreen canvas { box-shadow: none; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <a href="{% url 'presentation' %}" title="All presentations"><i class="fas fa-arrow-left"></i><span>Presentations</span></a>
+  <span class="title">{{ deck.title }}{% if deck.slides.version %}<span class="version">{{ deck.slides.version }}</span>{% endif %}</span>
+  <button type="button" id="prev" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
+  <span id="counter">…</span>
+  <button type="button" id="next" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
+  {% if notes_url %}<a href="{{ notes_url }}" target="_blank" rel="noopener" title="Speaker notes (opens in a new tab)"><i class="far fa-note-sticky"></i><span>Notes</span></a>{% endif %}
+  <button type="button" id="fullscreen" title="Full screen (F)" aria-label="Full screen"><i class="fas fa-expand"></i></button>
+</div>
+<div class="stage" id="stage">
+  <canvas id="slide" aria-label="Slide"></canvas>
+  <div class="zone prev" id="zonePrev" aria-hidden="true"></div>
+  <div class="zone next" id="zoneNext" aria-hidden="true"></div>
+  <div class="message" id="message">Loading the slides…</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function () {
+  var url = '{{ pdf_url|escapejs }}';
+  var canvas = document.getElementById('slide'), stage = document.getElementById('stage');
+  var counter = document.getElementById('counter'), message = document.getElementById('message');
+  var pdf = null, page = 1, rendering = null;
+
+  if (!window.pdfjsLib) { message.textContent = 'The slide viewer could not load. Check the internet connection, or open the PDF from Resources.'; return; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  function draw() {
+    if (!pdf) return;
+    pdf.getPage(page).then(function (p) {
+      var base = p.getViewport({ scale: 1 });
+      var scale = Math.min(stage.clientWidth / base.width, stage.clientHeight / base.height) * 0.97;
+      var ratio = window.devicePixelRatio || 1;
+      var vp = p.getViewport({ scale: scale * ratio });
+      canvas.width = vp.width; canvas.height = vp.height;
+      canvas.style.width = (vp.width / ratio) + 'px'; canvas.style.height = (vp.height / ratio) + 'px';
+      if (rendering) rendering.cancel();
+      rendering = p.render({ canvasContext: canvas.getContext('2d'), viewport: vp });
+      rendering.promise.catch(function () {});
+      counter.textContent = page + ' / ' + pdf.numPages;
+      try { history.replaceState(null, '', '#' + page); } catch (e) {}
+    });
+  }
+  function go(n) { if (!pdf) return; page = Math.max(1, Math.min(pdf.numPages, n)); draw(); }
+
+  pdfjsLib.getDocument({ url: url, withCredentials: true }).promise.then(function (doc) {
+    pdf = doc; message.remove();
+    go(parseInt(location.hash.slice(1), 10) || 1);
+  }).catch(function () {
+    message.textContent = 'The slides could not be opened. You may need to log in again.';
+  });
+
+  document.getElementById('prev').addEventListener('click', function () { go(page - 1); });
+  document.getElementById('next').addEventListener('click', function () { go(page + 1); });
+  document.getElementById('zonePrev').addEventListener('click', function () { go(page - 1); });
+  document.getElementById('zoneNext').addEventListener('click', function () { go(page + 1); });
+  function full() { if (document.fullscreenElement) document.exitFullscreen(); else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen(); }
+  document.getElementById('fullscreen').addEventListener('click', full);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); go(page + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') { e.preventDefault(); go(page - 1); }
+    else if (e.key === 'Home') go(1);
+    else if (e.key === 'End' && pdf) go(pdf.numPages);
+    else if (e.key === 'f' || e.key === 'F') full();
+  });
+  var startX = null;
+  stage.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', function (e) {
+    if (startX === null) return;
+    var dx = e.changedTouches[0].clientX - startX; startX = null;
+    if (Math.abs(dx) > 40) go(page + (dx < 0 ? 1 : -1));
+  });
+  var resizeTimer;
+  window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(draw, 150); });
+})();
+</script>
+</body>
+</html>

@@ -140,6 +140,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .yes { color: var(--teal); font-weight: 600; }
 .flag { color: var(--alert); font-weight: 600; }
 
+/* presentations */
+.deck-list { display: grid; gap: 14px; }
+.deck-card { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 18px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; }
+.deck-card.live { border-left: 5px solid var(--amber); }
+.deck-icon { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; background: var(--teal-soft); color: var(--teal); font-size: 20px; }
+.deck-card.live .deck-icon { background: var(--amber-soft); color: #8A5A10; }
+.deck-card h3 { margin: 0; color: var(--ink); font-size: 17px; }
+.deck-card .meta { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+@media (max-width: 700px) { .deck-card { grid-template-columns: 44px minmax(0, 1fr); } .deck-card .actions { grid-column: 1 / -1; } }
+
 /* login */
 body.login-page { background: var(--ink); }
 main.login { min-height: 100vh; max-width: 440px; align-content: center; justify-items: center; }

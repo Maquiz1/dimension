@@ -68,3 +68,31 @@ class StudyDocument(models.Model):
         """The title as a file name, keeping the original extension."""
         safe = ''.join(c if c.isalnum() or c in ' -_.()' else '_' for c in self.title).strip() or 'document'
         return f'{safe}.{self.extension}' if self.extension else safe
+
+
+class SlideDeck(models.Model):
+    """A presentation people can choose to present. It points at a Resources entry, so whatever file that entry
+    holds now (replaced there with each new version) is what gets presented."""
+
+    key = models.SlugField(unique=True, help_text='Short name used in the web address, e.g. inception-simple.')
+    title = models.CharField(max_length=120)
+    description = models.CharField(max_length=255, blank=True)
+    slides = models.ForeignKey(
+        StudyDocument, on_delete=models.PROTECT, related_name='+',
+        help_text='The Resources entry with the slides as a PDF. Replace the file there to update the presentation.',
+    )
+    notes = models.ForeignKey(
+        StudyDocument, on_delete=models.SET_NULL, null=True, blank=True, related_name='+',
+        help_text='Optional: the Resources entry with the speaker notes.',
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'title']
+
+    def __str__(self):
+        return self.title
+
+    def clean(self):
+        if self.slides_id and not self.slides.is_pdf:
+            raise ValidationError({'slides': 'Only a PDF can be presented. Upload the slides as a PDF in Resources.'})

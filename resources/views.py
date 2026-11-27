@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -14,7 +14,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from study.access import staff_required
 
 from .forms import StudyDocumentForm
-from .models import StudyDocument
+from .models import SlideDeck, StudyDocument
 
 
 def _permissions(user):
@@ -116,6 +116,12 @@ class DocumentDeleteView(PermissionRequiredMixin, DeleteView):
 
     def form_valid(self, form):
         document = self.get_object()
+        decks = SlideDeck.objects.filter(slides=document)
+        if decks.exists():
+            # Checked before anything is removed: the deck would be left without slides.
+            messages.error(self.request, f'“{document.title}” is presented as “{decks.first().title}”. '
+                                         'Replace its file instead, or remove the presentation first.')
+            return redirect('resources:detail', document.pk)
         if document.file:
             document.file.storage.delete(document.file.name)
         messages.success(self.request, f'“{document.title}” was deleted.')
