@@ -1,0 +1,10 @@
+{% extends "dimension/base.html" %}
+{% block title %}{% if period %}Edit period {{ period.number }}{% else %}Set period dates{% endif %}{% endblock %}
+{% block content %}
+  <p style="margin:0;"><a href="{% url 'periods' %}">← Study periods</a></p>
+  <section class="card" style="max-width:640px;">
+    <h2 class="page-title" style="margin-bottom:6px;">{% if period %}Edit period {{ period.number }}{% else %}Set period dates{% endif %}</h2>
+    <p class="sub">Periods must not overlap. After saving, existing records are placed in the right period again.</p>
+    {% include "study/_form.html" with submit_label="Save" cancel_url="/study-periods/" %}
+  </section>
+{% endblock %}

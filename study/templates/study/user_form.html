@@ -1,0 +1,10 @@
+{% extends "dimension/base.html" %}
+{% block title %}{% if person %}Edit {{ person.username }}{% else %}Add a user{% endif %}{% endblock %}
+{% block content %}
+  <p style="margin:0;"><a href="{% url 'users' %}">← Users</a></p>
+  <section class="card" style="max-width:720px;">
+    <h2 class="page-title" style="margin-bottom:6px;">{% if person %}Edit “{{ person.username }}”{% else %}Add a user{% endif %}</h2>
+    <p class="sub">Study staff can see the dashboard, clinics, study periods, Resources and presentations. Administrators can also manage users, period dates and the admin. Deactivate an account instead of deleting it, so its history is kept.</p>
+    {% include "study/_form.html" with submit_label="Save" cancel_url="/users/" %}
+  </section>
+{% endblock %}

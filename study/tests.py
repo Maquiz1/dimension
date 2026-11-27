@@ -238,3 +238,77 @@ class LayoutAndPresentationTests(TestCase):
         text = ' '.join(sh.text_frame.text for sl in deck.slides for sh in sl.shapes if sh.has_text_frame)
         self.assertIn('Stepped-wedge rollout', text)
         self.assertNotIn('SECRET-ID-002', text)
+
+
+class StudyPagesTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        from capture.ingest import ingest_record
+
+        self.clinic = Facility.objects.create(
+            code='T01', name='Test Clinic', facility_type='Dispensary', ward='W', clients=1,
+            region='Mwanza', district='D', selection_method='M', has_mental_health_unit=False, sequence=1,
+        )
+        Facility.objects.create(code='T02', name='Other Clinic', facility_type='Health centre', ward='W', clients=1,
+                                region='Dar es Salaam', district='D', selection_method='M', has_mental_health_unit=False)
+        record = {f'phq_{i:02d}': '0' for i in range(1, 10)}
+        record.update({'__id': 'uuid:p', 'study_id': 'S1', 'facility_code': 'T01', 'visit_date': '2027-08-01'})
+        self.submission = ingest_record('dim_5p_phq9', record)
+        self.staff = User.objects.create_user('staff', password='pass-1234-x', is_staff=True)
+        self.admin = User.objects.create_superuser('boss', 'b@x.org', 'pass-1234-x')
+
+    def test_sidebar_links_stay_in_the_study_system(self):
+        self.client.force_login(self.admin)
+        html = self.client.get('/').content.decode()
+        for href in ('href="/clinics/"', 'href="/study-periods/"', 'href="/users/"', 'href="/password/"'):
+            self.assertIn(href, html)
+        for admin_page in ('/admin/study/facility/', '/admin/study/studyperiod/', '/admin/auth/user/', '/admin/password_change/'):
+            self.assertNotIn(admin_page, html)
+
+    def test_clinics_list_and_filter(self):
+        self.client.force_login(self.staff)
+        response = self.client.get('/clinics/', {'region': 'Mwanza'})
+        self.assertContains(response, 'Test Clinic')
+        self.assertNotContains(response, 'Other Clinic')
+        self.assertContains(response, 'Period 3')   # sequence 1 starts the intervention in period 3
+
+    def test_setting_period_dates_updates_existing_records(self):
+        self.assertIsNone(self.submission.exposure)
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get('/study-periods/add/?number=3').status_code, 403)   # staff can view, not edit
+        self.client.force_login(self.admin)
+        response = self.client.post('/study-periods/add/', {'number': 3, 'start_date': '2027-07-01', 'end_date': '2027-09-30'})
+        self.assertRedirects(response, '/study-periods/', fetch_redirect_response=False)
+        self.submission.refresh_from_db()
+        self.assertEqual((self.submission.study_period, self.submission.exposure), (3, INTERVENTION))
+        response = self.client.post('/study-periods/add/', {'number': 4, 'start_date': '2027-09-01', 'end_date': '2027-12-31'})
+        self.assertContains(response, 'must not overlap')
+
+    def test_users_are_for_administrators_only(self):
+        self.client.force_login(self.staff)
+        self.assertEqual(self.client.get('/users/').status_code, 403)
+
+    def test_administrator_adds_and_edits_users(self):
+        from django.contrib.auth.models import User
+        self.client.force_login(self.admin)
+        response = self.client.post('/users/add/', {
+            'username': 'ra1', 'first_name': 'Asha', 'last_name': 'M', 'email': 'ra1@x.org', 'is_active': 'on',
+            'role': 'staff', 'manage_documents': 'on', 'password1': 'Strong-pass-2026', 'password2': 'Strong-pass-2026'})
+        self.assertRedirects(response, '/users/', fetch_redirect_response=False)
+        ra = User.objects.get(username='ra1')
+        self.assertTrue(ra.is_staff and not ra.is_superuser and ra.check_password('Strong-pass-2026'))
+        self.assertTrue(ra.has_perm('resources.delete_studydocument'))
+        response = self.client.post(f'/users/{self.admin.pk}/edit/', {
+            'username': 'boss', 'email': 'b@x.org', 'role': 'staff', 'is_active': 'on'})
+        self.assertContains(response, 'cannot remove your own administrator role')
+        response = self.client.post(f'/users/{ra.pk}/password/', {'new_password1': 'Another-pass-2026', 'new_password2': 'Another-pass-2026'})
+        self.assertRedirects(response, '/users/', fetch_redirect_response=False)
+        ra.refresh_from_db()
+        self.assertTrue(ra.check_password('Another-pass-2026'))
+
+    def test_change_own_password_and_stay_logged_in(self):
+        self.client.force_login(self.staff)
+        response = self.client.post('/password/', {'old_password': 'pass-1234-x', 'new_password1': 'Fresh-pass-2026', 'new_password2': 'Fresh-pass-2026'})
+        self.assertRedirects(response, '/', fetch_redirect_response=False)
+        self.assertEqual(self.client.get('/').status_code, 200)

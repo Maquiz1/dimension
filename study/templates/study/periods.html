@@ -1,0 +1,31 @@
+{% extends "dimension/base.html" %}
+{% block title %}Study periods{% endblock %}
+{% block content %}
+  <section class="toolbar">
+    <div>
+      <h2 class="page-title">Study periods</h2>
+      <p class="sub" style="margin:4px 0 0;">8 periods of about 3 months. Each record is placed in a period by its visit date, and marked control or intervention from its clinic’s sequence. {{ defined }} of 8 periods have dates.</p>
+    </div>
+  </section>
+
+  {% if defined < 8 %}<ul class="messages"><li>Records can only be marked control or intervention once their period has dates. The statistician is to send them (decision D07).</li></ul>{% endif %}
+
+  <section class="card">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Period</th><th>Start</th><th>End</th><th>Sequences in intervention</th>{% if can_edit %}<th></th>{% endif %}</tr></thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td><b>Period {{ row.number }}</b>{% if row.current %} <span class="badge">Current</span>{% endif %}</td>
+            <td>{% if row.period %}{{ row.period.start_date|date:"j M Y" }}{% else %}<span class="pending">Not set</span>{% endif %}</td>
+            <td>{% if row.period %}{{ row.period.end_date|date:"j M Y" }}{% else %}<span class="pending">Not set</span>{% endif %}</td>
+            <td>{% if row.intervention %}{{ row.intervention|join:", " }}{% else %}None (all control){% endif %}</td>
+            {% if can_edit %}<td class="num">{% if row.period %}<a class="btn secondary" href="{% url 'period-edit' row.number %}">Edit</a>{% else %}<a class="btn" href="{% url 'period-add' %}?number={{ row.number }}">Set dates</a>{% endif %}</td>{% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

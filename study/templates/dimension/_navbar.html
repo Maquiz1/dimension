@@ -35,7 +35,7 @@
         <div class="tb-menu-user"><span class="tb-avatar lg" aria-hidden="true">{% firstof user.first_name|slice:":1"|upper user.username|slice:":1"|upper %}</span>
           <span><strong>{% firstof user.get_full_name user.username %}</strong><small>{{ user.email|default:user.username }}</small></span></div>
         <a class="tb-item" href="{% url 'dashboard' %}"><i class="fas fa-house"></i><span>Dashboard</span></a>
-        <a class="tb-item" href="{% url 'admin:password_change' %}"><i class="fas fa-key"></i><span>Change password</span></a>
+        <a class="tb-item" href="{% url 'password-change' %}"><i class="fas fa-key"></i><span>Change password</span></a>
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="tb-item tb-logout"><i class="fas fa-right-from-bracket"></i><span>Log out</span></button></form>
       </div>
     </div>

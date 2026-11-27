@@ -1,0 +1,33 @@
+{% extends "dimension/base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+  <section class="toolbar">
+    <div>
+      <h2 class="page-title">Users</h2>
+      <p class="sub" style="margin:4px 0 0;">Everyone who can log in to the study system. Administrators can also manage users; document managers can change Resources.</p>
+    </div>
+    <a class="btn" href="{% url 'user-add' %}"><i class="fas fa-user-plus"></i> Add a user</a>
+  </section>
+
+  <section class="card">
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Documents</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+        <tbody>
+          {% for row in rows %}{% with u=row.u %}
+          <tr>
+            <td><b>{% firstof u.get_full_name "–" %}</b>{% if u == user %} <span class="badge">You</span>{% endif %}</td>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email|default:"–" }}</td>
+            <td>{% if u.is_superuser %}Administrator{% elif u.is_staff %}Study staff{% else %}<span class="pending">No access</span>{% endif %}</td>
+            <td>{% if row.documents %}<span class="yes">Can manage</span>{% else %}View only{% endif %}</td>
+            <td>{% if u.is_active %}Active{% else %}<span class="flag">Deactivated</span>{% endif %}</td>
+            <td>{% if u.last_login %}{{ u.last_login|date:"j M Y, H:i" }}{% else %}<span class="pending">Never</span>{% endif %}</td>
+            <td class="num nowrap"><a class="btn secondary" href="{% url 'user-edit' u.pk %}">Edit</a> <a class="btn secondary" href="{% url 'user-password' u.pk %}">Password</a></td>
+          </tr>
+          {% endwith %}{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

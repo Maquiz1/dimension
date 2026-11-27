@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
+from study import pages
 from study.access import StudyLoginView
 from study.views import dashboard, presentation, presentation_live, presentation_pptx, slideshow
 
@@ -27,6 +28,15 @@ admin.site.index_title = 'Data management'
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
+    path('clinics/', pages.clinics, name='clinics'),
+    path('study-periods/', pages.periods, name='periods'),
+    path('study-periods/add/', pages.period_edit, name='period-add'),
+    path('study-periods/<int:number>/edit/', pages.period_edit, name='period-edit'),
+    path('users/', pages.users, name='users'),
+    path('users/add/', pages.user_edit, name='user-add'),
+    path('users/<int:pk>/edit/', pages.user_edit, name='user-edit'),
+    path('users/<int:pk>/password/', pages.user_password, name='user-password'),
+    path('password/', pages.password_change, name='password-change'),
     path('presentation/', presentation, name='presentation'),
     path('presentation/live/', presentation_live, name='presentation-live'),
     path('presentation/live/download.pptx', presentation_pptx, name='presentation-pptx'),

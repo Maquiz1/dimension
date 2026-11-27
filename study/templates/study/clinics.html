@@ -1,0 +1,47 @@
+{% extends "dimension/base.html" %}
+{% block title %}Clinics{% endblock %}
+{% block content %}
+  <section>
+    <h2 class="page-title">Clinics</h2>
+    <p class="sub" style="margin:4px 0 0;">The 20 clinics confirmed by the statistician, with their stepped-wedge sequence. They come from the data dictionary, and the allocation cannot be changed once loaded.</p>
+  </section>
+
+  <form class="card toolbar" method="get" role="search" style="padding:16px 20px;">
+    <div class="filters">
+      <label>Region <select name="region" onchange="this.form.submit()"><option value="">All</option>{% for r in regions %}<option value="{{ r }}"{% if r == region %} selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
+      <label>Type <select name="type" onchange="this.form.submit()"><option value="">All</option>{% for k in kinds %}<option value="{{ k }}"{% if k == kind %} selected{% endif %}>{{ k }}</option>{% endfor %}</select></label>
+    </div>
+    <div class="search">
+      <input type="search" name="q" value="{{ q }}" placeholder="Name, code, district or ward" aria-label="Search clinics">
+      <button class="btn secondary" type="submit">Search</button>
+    </div>
+  </form>
+
+  <section class="card">
+    <p class="sub">{{ rows|length }} of {{ total }} clinics{% if region or kind or q %} · <a href="{% url 'clinics' %}">Show all</a>{% endif %}</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Code</th><th>Clinic</th><th>Type</th><th>Ward</th><th>District</th><th>Region</th><th>Mental health unit</th><th class="num">Clients</th><th class="num">Sequence</th><th class="num">Intervention from</th><th class="num">Submissions</th></tr></thead>
+        <tbody>
+          {% for row in rows %}{% with f=row.f %}
+          <tr>
+            <td>{{ f.code }}</td>
+            <td><b>{{ f.name }}</b></td>
+            <td>{{ f.facility_type }}</td>
+            <td>{{ f.ward }}</td>
+            <td>{{ f.district }}</td>
+            <td>{{ f.region }}</td>
+            <td>{% if f.has_mental_health_unit %}<span class="yes">Yes</span>{% else %}No{% endif %}</td>
+            <td class="num">{{ f.clients }}</td>
+            <td class="num">{% if f.sequence %}{{ f.sequence }}{% else %}<span class="pending">Pending</span>{% endif %}</td>
+            <td class="num">{% if row.start %}Period {{ row.start }}{% else %}–{% endif %}</td>
+            <td class="num">{{ f.submissions }}</td>
+          </tr>
+          {% endwith %}{% empty %}
+          <tr><td colspan="11" class="pending">No clinics match.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

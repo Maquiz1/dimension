@@ -118,6 +118,13 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .field .help { color: var(--muted); font-size: 13px; }
 .field .errorlist { margin: 0; padding: 0; list-style: none; color: var(--alert); font-size: 13px; font-weight: 600; }
 .field ul.radio { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.field input[type=email], .field input[type=password], .field input[type=date], .field input[type=number] { width: 100%; padding: 9px 11px; border: 1px solid #B8C6C4; border-radius: 6px; font: inherit; background: #FFF; color: var(--ink); }
+.field input:disabled { background: var(--mist); color: var(--muted); }
+.field label.check { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.field label.check input { width: 18px; height: 18px; }
+.filters { display: flex; flex-wrap: wrap; gap: 14px; }
+.filters label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.filters select { padding: 7px 9px; border: 1px solid #B8C6C4; border-radius: 6px; font: inherit; background: #FFF; color: var(--ink); }
 
 /* dashboard */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 16px; }

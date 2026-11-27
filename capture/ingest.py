@@ -72,3 +72,16 @@ def ingest_record(xml_form_id, record):
     submission.review_reason = ' '.join(problems)
     submission.save(update_fields=['needs_review', 'review_reason'])
     return submission
+
+
+def refresh_periods():
+    """Recalculate study period and exposure on every record, after period dates or the allocation change.
+    Returns how many records changed."""
+    changed = 0
+    for submission in FormSubmission.objects.select_related('facility').exclude(facility=None).exclude(visit_date=None):
+        period, exposure = exposure_for(submission.facility, submission.visit_date)
+        if (period, exposure) != (submission.study_period, submission.exposure):
+            submission.study_period, submission.exposure = period, exposure
+            submission.save(update_fields=['study_period', 'exposure'])
+            changed += 1
+    return changed
