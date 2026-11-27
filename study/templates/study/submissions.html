@@ -1,0 +1,54 @@
+{% extends "dimension/base.html" %}
+{% block title %}Form submissions{% endblock %}
+{% block content %}
+  <section>
+    <h2 class="page-title">Form submissions</h2>
+    <p class="sub" style="margin:4px 0 0;">Every form received from ODK Central, with its clinic, study period and control/intervention status. Scores are calculated on the server. To correct an answer, edit the submission in ODK Central; the change comes through on the next pull.</p>
+  </section>
+
+  <form class="card toolbar" method="get" role="search" style="padding:16px 20px;">
+    <div class="filters">
+      <label>Form <select name="form" onchange="this.form.submit()"><option value="">All</option>{% for key, name in forms %}<option value="{{ key }}"{% if key == form %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+      <label>Clinic <select name="clinic" onchange="this.form.submit()"><option value="">All</option>{% for c in clinics %}<option value="{{ c.code }}"{% if c.code == clinic %} selected{% endif %}>{{ c.code }} · {{ c.name }}</option>{% endfor %}</select></label>
+      <label>Period <select name="period" onchange="this.form.submit()"><option value="">All</option>{% for n in periods %}<option value="{{ n }}"{% if period == n|stringformat:"d" %} selected{% endif %}>Period {{ n }}</option>{% endfor %}<option value="none"{% if period == "none" %} selected{% endif %}>Not yet assigned</option></select></label>
+      <label>Status <select name="status" onchange="this.form.submit()"><option value="">All</option><option value="review"{% if status == "review" %} selected{% endif %}>Flagged for review</option><option value="item9"{% if status == "item9" %} selected{% endif %}>Item 9 safety alert</option></select></label>
+    </div>
+    <div class="search">
+      <input type="search" name="q" value="{{ q }}" placeholder="Study ID" aria-label="Search by study ID">
+      <button class="btn secondary" type="submit">Search</button>
+    </div>
+  </form>
+
+  <section class="card">
+    <p class="sub">{{ page.paginator.count }} of {{ total }} submission{{ total|pluralize }}{% if filtered %} · <a href="{% url 'submissions' %}">Show all</a>{% endif %}</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Study ID</th><th>Form</th><th>Clinic</th><th>Visit date</th><th class="num">Period</th><th>Arm</th><th class="num">Total</th><th>Status</th><th>Received</th></tr></thead>
+        <tbody>
+          {% for row in rows %}{% with s=row.s %}
+          <tr>
+            <td><a href="{% url 'submission' s.pk %}"><b>{{ s.study_id|default:"(missing)" }}</b></a></td>
+            <td>{{ row.form }}</td>
+            <td>{% if s.facility %}{{ s.facility.code }} · {{ s.facility.name }}{% else %}<span class="pending">Unknown</span>{% endif %}</td>
+            <td>{{ s.visit_date|date:"j M Y"|default:"–" }}</td>
+            <td class="num">{{ s.study_period|default:"–" }}</td>
+            <td>{{ row.exposure|default:"–" }}</td>
+            <td class="num">{% if row.total is not None %}{{ row.total }}{% else %}–{% endif %}</td>
+            <td>{% if s.item9 %}<span class="flag"><i class="fas fa-triangle-exclamation"></i> Item 9 alert</span>{% endif %}{% if s.needs_review %}{% if s.item9 %}<br>{% endif %}<span class="badge" style="margin-left:0;" title="{{ s.review_reason }}">For review</span>{% endif %}{% if not s.item9 and not s.needs_review %}<span class="yes">OK</span>{% endif %}</td>
+            <td>{{ s.submitted_at|date:"j M Y, H:i"|default:"–" }}</td>
+          </tr>
+          {% endwith %}{% empty %}
+          <tr><td colspan="9" class="pending">{% if filtered %}No submissions match.{% else %}No submissions yet. They appear here after the next pull from ODK Central.{% endif %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if page.has_other_pages %}
+    <nav class="pager" aria-label="Pages">
+      {% if page.has_previous %}<a class="btn secondary" href="?{% if query %}{{ query }}&amp;{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+      <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+      {% if page.has_next %}<a class="btn secondary" href="?{% if query %}{{ query }}&amp;{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}
+    </nav>
+    {% endif %}
+  </section>
+{% endblock %}

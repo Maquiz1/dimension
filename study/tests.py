@@ -312,3 +312,60 @@ class StudyPagesTests(TestCase):
         response = self.client.post('/password/', {'old_password': 'pass-1234-x', 'new_password1': 'Fresh-pass-2026', 'new_password2': 'Fresh-pass-2026'})
         self.assertRedirects(response, '/', fetch_redirect_response=False)
         self.assertEqual(self.client.get('/').status_code, 200)
+
+
+class SubmissionPagesTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        from capture.ingest import ingest_record
+
+        Facility.objects.create(
+            code='T01', name='Test Clinic', facility_type='Dispensary', ward='W', clients=1,
+            region='Mwanza', district='D', selection_method='M', has_mental_health_unit=False, sequence=1,
+        )
+        calm = {f'phq_{i:02d}': '0' for i in range(1, 10)}
+        calm.update({'__id': 'uuid:a', 'study_id': 'CALM1', 'facility_code': 'T01', 'visit_date': '2027-08-01'})
+        self.calm = ingest_record('dim_5p_phq9', calm)
+        alert = dict(calm, __id='uuid:b', study_id='ALERT1', phq_09='2')
+        self.alert = ingest_record('dim_5p_phq9', alert)
+        broken = dict(calm, __id='uuid:c', study_id='', phq_01=None)
+        self.broken = ingest_record('dim_5p_phq9', broken)
+        self.staff = User.objects.create_user('staff', password='pass-1234-x', is_staff=True)
+        self.client.force_login(self.staff)
+
+    def test_links_stay_in_the_study_system(self):
+        html = self.client.get('/').content.decode()
+        self.assertIn('href="/submissions/"', html)
+        self.assertIn('/submissions/?status=item9', html)
+        self.assertIn('/submissions/?status=review', html)
+        self.assertNotIn('/admin/capture/', html)
+
+    def test_list_and_status_filters(self):
+        response = self.client.get('/submissions/')
+        for study_id in ('CALM1', 'ALERT1', '(missing)'):
+            self.assertContains(response, study_id)
+        response = self.client.get('/submissions/', {'status': 'item9'})
+        self.assertContains(response, 'ALERT1')
+        self.assertNotContains(response, 'CALM1')
+        response = self.client.get('/submissions/', {'status': 'review'})
+        self.assertContains(response, '(missing)')
+        self.assertNotContains(response, 'ALERT1')
+        response = self.client.get('/submissions/', {'q': 'calm'})
+        self.assertContains(response, 'CALM1')
+        self.assertNotContains(response, 'ALERT1')
+
+    def test_detail_shows_scores_answers_and_alert(self):
+        response = self.client.get(f'/submissions/{self.alert.pk}/')
+        self.assertContains(response, 'item 9 safety alert')
+        self.assertContains(response, 'PHQ-9 total')
+        self.assertContains(response, 'phq_09')
+        response = self.client.get(f'/submissions/{self.broken.pk}/')
+        self.assertContains(response, 'Flagged for review')
+        self.assertContains(response, 'Missing study_id.')
+
+    def test_login_required(self):
+        self.client.logout()
+        response = self.client.get('/submissions/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response['Location'])

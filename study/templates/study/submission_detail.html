@@ -1,0 +1,62 @@
+{% extends "dimension/base.html" %}
+{% block title %}{{ s.study_id|default:"Submission" }} · {{ form }}{% endblock %}
+{% block content %}
+  <section>
+    <p class="sub" style="margin:0 0 6px;"><a href="{% url 'submissions' %}"><i class="fas fa-arrow-left"></i> All form submissions</a></p>
+    <h2 class="page-title">{{ form }} · {{ s.study_id|default:"(missing study ID)" }}</h2>
+  </section>
+
+  {% if item9 %}
+  <section class="card alert-card" role="alert">
+    <b><i class="fas fa-triangle-exclamation"></i> PHQ-9 item 9 safety alert.</b> The participant reported thoughts of death or self-harm. Check that the safety pathway was followed and the referral was made.
+  </section>
+  {% endif %}
+  {% if s.needs_review %}
+  <section class="card review-card">
+    <b>Flagged for review.</b> {{ s.review_reason }} Correct the submission in ODK Central; it is checked again on the next pull.
+  </section>
+  {% endif %}
+
+  <div class="grid-2">
+    <section class="card">
+      <h3>Record</h3>
+      <dl class="facts">
+        <dt>Study ID</dt><dd>{{ s.study_id|default:"–" }}</dd>
+        <dt>Clinic</dt><dd>{% if s.facility %}{{ s.facility.code }} · {{ s.facility.name }} ({{ s.facility.region }}){% else %}<span class="pending">Unknown</span>{% endif %}</dd>
+        <dt>Visit date</dt><dd>{{ s.visit_date|date:"j F Y"|default:"–" }}</dd>
+        <dt>Study period</dt><dd>{% if s.study_period %}Period {{ s.study_period }}{% else %}<span class="pending">Not yet assigned (period dates not set)</span>{% endif %}</dd>
+        <dt>Arm</dt><dd>{{ exposure|default:"–" }}</dd>
+        <dt>Received</dt><dd>{{ s.submitted_at|date:"j F Y, H:i"|default:"–" }}</dd>
+        <dt>Form</dt><dd>{{ s.xml_form_id }}{% if s.form_version %}, version {{ s.form_version }}{% endif %}</dd>
+        <dt>ODK instance</dt><dd><code>{{ s.instance_id }}</code></dd>
+      </dl>
+    </section>
+    <section class="card">
+      <h3>Scores (calculated on the server)</h3>
+      <table>
+        <tbody>
+          {% for sc in scores %}
+          <tr><td>{{ sc.label }}</td><td class="num">{% if sc.alert %}<span class="flag">{{ sc.value }}</span>{% else %}<b>{{ sc.value }}</b>{% endif %}</td></tr>
+          {% empty %}
+          <tr><td class="pending">No scores for this form.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if scores %}<p class="sub" style="margin-top:10px;">Scoring rules {{ scores.0.rule }}. A total is left blank when any item is missing.</p>{% endif %}
+    </section>
+  </div>
+
+  <section class="card">
+    <h3>Answers as received</h3>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+        <tbody>
+          {% for key, value in answers %}
+          <tr><td><code>{{ key }}</code></td><td>{% if value is None or value == "" %}<span class="pending">blank</span>{% else %}{{ value }}{% endif %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

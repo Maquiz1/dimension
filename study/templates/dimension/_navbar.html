@@ -12,12 +12,12 @@
       <div class="tb-menu tb-menu-wide" id="alertsMenu" hidden>
         <div class="tb-menu-head">Alerts</div>
         {% if nav_alerts.item9_alerts %}
-        <a class="tb-item" href="{% url 'admin:capture_derivedscore_changelist' %}?variable=phq_item9_alert&amp;number_value=1">
+        <a class="tb-item" href="{% url 'submissions' %}?status=item9">
           <span class="tb-dot red"></span><span>{{ nav_alerts.item9_alerts }} PHQ-9 item 9 safety alert{{ nav_alerts.item9_alerts|pluralize }}<small>Thoughts of death or self-harm: check the referral was made</small></span>
         </a>
         {% endif %}
         {% if nav_alerts.review_count %}
-        <a class="tb-item" href="{% url 'admin:capture_formsubmission_changelist' %}?needs_review__exact=1">
+        <a class="tb-item" href="{% url 'submissions' %}?status=review">
           <span class="tb-dot amber"></span><span>{{ nav_alerts.review_count }} record{{ nav_alerts.review_count|pluralize }} flagged for review<small>Missing or invalid answers</small></span>
         </a>
         {% endif %}

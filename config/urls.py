@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from study import pages
+from study import pages, submissions
 from study.access import StudyLoginView
 from study.views import dashboard, presentation, presentation_live, presentation_pptx, slideshow
 
@@ -32,6 +32,8 @@ urlpatterns = [
     path('study-periods/', pages.periods, name='periods'),
     path('study-periods/add/', pages.period_edit, name='period-add'),
     path('study-periods/<int:number>/edit/', pages.period_edit, name='period-edit'),
+    path('submissions/', submissions.submissions, name='submissions'),
+    path('submissions/<int:pk>/', submissions.submission_detail, name='submission'),
     path('users/', pages.users, name='users'),
     path('users/add/', pages.user_edit, name='user-add'),
     path('users/<int:pk>/edit/', pages.user_edit, name='user-edit'),

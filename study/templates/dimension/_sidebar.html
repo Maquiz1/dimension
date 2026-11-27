@@ -14,7 +14,7 @@
     {% url 'clinics' as u_clinics %}{% url 'periods' as u_periods %}
     <a href="{{ u_clinics }}" class="sb-link{% if request.path == u_clinics %} active{% endif %}"><i class="fas fa-hospital"></i><span>Clinics</span></a>
     <a href="{{ u_periods }}" class="sb-link{% if request.path|slice:':15' == '/study-periods/' %} active{% endif %}"><i class="fas fa-calendar-days"></i><span>Study periods</span></a>
-    <a href="{% url 'admin:capture_formsubmission_changelist' %}" class="sb-link"><i class="fas fa-file-medical"></i><span>Form submissions</span>{% if nav_alerts.review_count %}<span class="sb-count amber" title="Flagged for review">{{ nav_alerts.review_count }}</span>{% endif %}</a>
+    {% url 'submissions' as u_submissions %}<a href="{{ u_submissions }}" class="sb-link{% if request.path|slice:':13' == '/submissions/' %} active{% endif %}"><i class="fas fa-file-medical"></i><span>Form submissions</span>{% if nav_alerts.review_count %}<span class="sb-count amber" title="Flagged for review">{{ nav_alerts.review_count }}</span>{% endif %}</a>
 
     <div class="sb-label">Resources</div>
     <a href="{{ u_resources }}" class="sb-link{% if request.path|slice:':11' == '/resources/' %} active{% endif %}"><i class="fas fa-folder-open"></i><span>Documents</span></a>

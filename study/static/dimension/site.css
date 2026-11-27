@@ -202,3 +202,15 @@ main.login > .rng { color: #BFD3D6; }
   .doc .ext { width: 44px; height: 44px; }
   .doc .actions { grid-column: 1 / -1; }
 }
+
+/* Form submissions */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+.grid-2 > .card { margin: 0; }
+.card h3 { margin: 0 0 12px; font-size: 16px; color: var(--ink); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; margin: 0; font-size: 14px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.alert-card { border-left: 4px solid var(--alert); background: var(--alert-soft); color: var(--ink); }
+.review-card { border-left: 4px solid #C8901E; background: var(--amber-soft); }
+.card .pager { margin-top: 16px; }
+@media (max-width: 520px) { .facts { grid-template-columns: 1fr; gap: 2px; } .facts dd { margin-bottom: 8px; } }
