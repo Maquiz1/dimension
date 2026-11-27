@@ -1,0 +1,68 @@
+{% extends "dimension/base.html" %}
+{% block title %}My profile{% endblock %}
+{% block content %}
+  <section>
+    <h2 class="page-title">My profile</h2>
+    <p class="sub" style="margin:4px 0 0;">Your details, password and mobile number.</p>
+  </section>
+
+  <div class="grid-2">
+    <section class="card">
+      <h3>Your details</h3>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="details">
+        {% if form.non_field_errors %}<ul class="messages"><li class="error">{{ form.non_field_errors|join:" " }}</li></ul>{% endif %}
+        {% for field in form %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+        {% endfor %}
+        <div class="actions"><button class="btn" type="submit">Save my details</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>Account</h3>
+      <dl class="facts">
+        <dt>Username</dt><dd>{{ user.username }}</dd>
+        <dt>Role</dt><dd>{% if user.is_superuser %}Administrator{% else %}Study staff{% endif %}</dd>
+        <dt>Last login</dt><dd>{{ user.last_login|date:"j F Y, H:i"|default:"–" }}</dd>
+        <dt>Member since</dt><dd>{{ user.date_joined|date:"j F Y" }}</dd>
+      </dl>
+      <p class="sub" style="margin-top:14px;">You can log in with your username or your email address.</p>
+      <a class="btn secondary" href="{% url 'password-change' %}"><i class="fas fa-key"></i> Change my password</a>
+    </section>
+  </div>
+
+  <section class="card" id="phone" style="max-width:720px;">
+    <h3>Mobile number</h3>
+    {% if profile.phone_verified_at %}
+      <p><span class="yes"><i class="fas fa-circle-check"></i> {{ profile.phone_display }} is verified</span> <span class="rng">(on {{ profile.phone_verified_at|date:"j M Y" }})</span></p>
+      <p class="sub">To use a different number, enter it below and verify it with the code we send.</p>
+    {% else %}
+      <p class="sub">Verify your mobile number so the study can reach you by SMS, for example about safety alerts. We text you a 6-digit code.</p>
+    {% endif %}
+    {% if not sms_ready %}<p class="badge" style="margin:0 0 14px;">SMS is not set up on this server yet: codes are written to the server log, not sent.</p>{% endif %}
+    <form method="post" action="{% url 'phone-send' %}" class="inline-form" novalidate>
+      {% csrf_token %}
+      <div class="field">
+        <label for="{{ phone_form.phone.id_for_label }}">{{ phone_form.phone.label }}</label>
+        {{ phone_form.phone }}
+      </div>
+      <button class="btn secondary" type="submit">{% if pending %}Send a new code{% else %}Send me a code{% endif %}</button>
+    </form>
+    {% if pending %}
+    <form method="post" action="{% url 'phone-verify' %}" class="inline-form" novalidate>
+      {% csrf_token %}
+      <div class="field">
+        <label for="{{ code_form.code.id_for_label }}">{{ code_form.code.label }}</label>
+        {{ code_form.code }}
+      </div>
+      <button class="btn" type="submit">Verify</button>
+    </form>
+    {% endif %}
+  </section>
+{% endblock %}

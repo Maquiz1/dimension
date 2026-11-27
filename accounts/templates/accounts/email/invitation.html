@@ -1,0 +1,14 @@
+<div style="font-family:Arial,sans-serif;font-size:15px;color:#14303A;max-width:560px;">
+<p>Hello {{ user.first_name }},</p>
+<p>{% firstof invited_by.get_full_name invited_by.username %} created your account on the <b>DIMENSION Study</b> data system.</p>
+<p><b>1. Activate your account</b> (the link works for {{ days }} days):</p>
+<p><a href="{{ link }}" style="display:inline-block;background:#1F5F6B;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold;">Activate my account</a></p>
+<p><b>2. Log in</b> at <a href="{{ login_url }}">{{ login_url }}</a></p>
+<table style="border-collapse:collapse;margin:0 0 12px;">
+<tr><td style="padding:4px 14px 4px 0;color:#5C6F73;">Username</td><td style="padding:4px 0;"><b>{{ user.username }}</b> (or your email address)</td></tr>
+<tr><td style="padding:4px 14px 4px 0;color:#5C6F73;">Temporary password</td><td style="padding:4px 0;font-family:monospace;font-size:16px;"><b>{{ password }}</b></td></tr>
+</table>
+<p><b>3. Choose your own password</b> when asked.</p>
+<p style="color:#5C6F73;font-size:13px;">Do not share this email. If you were not expecting it, ignore it.</p>
+<p>DIMENSION Study data system</p>
+</div>

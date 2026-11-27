@@ -30,7 +30,7 @@
 
   <div class="sb-user">
     <span class="sb-avatar" aria-hidden="true">{% firstof user.first_name|slice:":1"|upper user.username|slice:":1"|upper %}</span>
-    <span class="sb-user-text">{% firstof user.get_full_name user.username %}<small>{% if user.is_superuser %}Administrator{% else %}Study staff{% endif %}</small></span>
+    <a class="sb-user-text" href="{% url 'profile' %}" title="My profile">{% firstof user.get_full_name user.username %}<small>{% if user.is_superuser %}Administrator{% else %}Study staff{% endif %}</small></a>
     <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="sb-logout" title="Log out" aria-label="Log out"><i class="fas fa-right-from-bracket"></i></button></form>
   </div>
 </aside>

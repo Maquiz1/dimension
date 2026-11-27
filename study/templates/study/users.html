@@ -4,26 +4,39 @@
   <section class="toolbar">
     <div>
       <h2 class="page-title">Users</h2>
-      <p class="sub" style="margin:4px 0 0;">Everyone who can log in to the study system. Administrators can also manage users; document managers can change Resources.</p>
+      <p class="sub" style="margin:4px 0 0;">{{ counts.active }} active{% if counts.pending %} · {{ counts.pending }} invitation{{ counts.pending|pluralize }} pending{% endif %}{% if counts.deactivated %} · {{ counts.deactivated }} deactivated{% endif %}. A new user gets an email with an activation link and a temporary password, and chooses their own password at first login.</p>
     </div>
-    <a class="btn" href="{% url 'user-add' %}"><i class="fas fa-user-plus"></i> Add a user</a>
+    <a class="btn" href="{% url 'user-add' %}"><i class="fas fa-user-plus"></i> Register a user</a>
   </section>
 
   <section class="card">
     <div class="scroll">
       <table>
-        <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Role</th><th>Documents</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+        <thead><tr><th>Name and email</th><th>Username</th><th>Phone</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
         <tbody>
-          {% for row in rows %}{% with u=row.u %}
+          {% for row in rows %}{% with u=row.u p=row.profile %}
           <tr>
-            <td><b>{% firstof u.get_full_name "–" %}</b>{% if u == user %} <span class="badge">You</span>{% endif %}</td>
+            <td><b>{% firstof u.get_full_name "–" %}</b>{% if u == user %} <span class="badge">You</span>{% endif %}<br><small class="rng">{{ u.email|default:"no email" }}</small></td>
             <td>{{ u.username }}</td>
-            <td>{{ u.email|default:"–" }}</td>
-            <td>{% if u.is_superuser %}Administrator{% elif u.is_staff %}Study staff{% else %}<span class="pending">No access</span>{% endif %}</td>
-            <td>{% if row.documents %}<span class="yes">Can manage</span>{% else %}View only{% endif %}</td>
-            <td>{% if u.is_active %}Active{% else %}<span class="flag">Deactivated</span>{% endif %}</td>
-            <td>{% if u.last_login %}{{ u.last_login|date:"j M Y, H:i" }}{% else %}<span class="pending">Never</span>{% endif %}</td>
-            <td class="num nowrap"><a class="btn secondary" href="{% url 'user-edit' u.pk %}">Edit</a> <a class="btn secondary" href="{% url 'user-password' u.pk %}">Password</a></td>
+            <td class="nowrap">{% if p.phone_verified_at %}<span class="yes" title="Verified">{{ p.phone_display }} <i class="fas fa-circle-check"></i></span>{% else %}<span class="pending">Not verified</span>{% endif %}</td>
+            <td class="nowrap">{% if u.is_superuser %}Administrator{% elif u.is_staff %}Study staff{% else %}<span class="pending">No access</span>{% endif %}<br><small class="rng">{% if row.documents %}Manages documents{% else %}Views documents{% endif %}</small></td>
+            <td class="nowrap">{% if p.status == 'active' %}<span class="yes">Active</span>{% if p.must_change_password %}<br><small class="rng">Must change password</small>{% endif %}{% elif p.status == 'pending' %}<span class="badge" style="margin-left:0;">Invitation pending</span>{% if p.invited_at %}<br><small class="rng">sent {{ p.invited_at|date:"j M, H:i" }}</small>{% endif %}{% else %}<span class="flag">Deactivated</span>{% endif %}</td>
+            <td class="nowrap">{% if u.last_login %}{{ u.last_login|date:"j M Y, H:i" }}<br><small class="rng">{{ u.last_login|timesince }} ago</small>{% else %}<span class="pending">Never</span>{% endif %}</td>
+            <td class="num row-actions"><div>
+              <a class="btn secondary" href="{% url 'user-edit' u.pk %}">Edit</a>
+              {% if u != user %}
+                {% if p.status == 'pending' %}
+                <form method="post" action="{% url 'user-status' u.pk 'invite' %}">{% csrf_token %}<button class="btn secondary" type="submit">Resend invite</button></form>
+                {% else %}
+                <a class="btn secondary" href="{% url 'user-password' u.pk %}">Password</a>
+                {% endif %}
+                {% if p.status == 'deactivated' %}
+                <form method="post" action="{% url 'user-status' u.pk 'reactivate' %}">{% csrf_token %}<button class="btn secondary" type="submit">Reactivate</button></form>
+                {% else %}
+                <form method="post" action="{% url 'user-status' u.pk 'deactivate' %}" onsubmit="return confirm('Deactivate {{ u.username|escapejs }}? They will not be able to log in.');">{% csrf_token %}<button class="btn danger" type="submit">Deactivate</button></form>
+                {% endif %}
+              {% endif %}
+            </div></td>
           </tr>
           {% endwith %}{% endfor %}
         </tbody>

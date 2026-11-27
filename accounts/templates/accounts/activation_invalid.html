@@ -1,0 +1,8 @@
+{% extends "dimension/auth_base.html" %}
+{% block title %}Activation link not valid{% endblock %}
+{% block card %}
+    <h1>This link does not work</h1>
+    <p class="sub">The activation link has expired, was replaced by a newer invitation, or the account was deactivated. Activation links work for 3 days.</p>
+    <p>Ask a DIMENSION administrator to send you a new invitation.</p>
+    <p class="login-foot"><a href="{% url 'login' %}">Go to the login page</a></p>
+{% endblock %}

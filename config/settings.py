@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'study',
     'capture',
     'resources',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'accounts.middleware.ForcePasswordChangeMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -171,3 +173,32 @@ ODK_EMAIL = os.environ.get('ODK_EMAIL', '')
 ODK_PASSWORD = os.environ.get('ODK_PASSWORD', '')
 ODK_PROJECT_ID = os.environ.get('ODK_PROJECT_ID', '')
 ODK_VERIFY_TLS = os.environ.get('ODK_VERIFY_TLS', '1') == '1'
+
+# Log in with the username or the email address (accounts.backends).
+AUTHENTICATION_BACKENDS = ['accounts.backends.EmailOrUsernameBackend']
+# Activation and password-reset links work for 3 days.
+PASSWORD_RESET_TIMEOUT = 3 * 24 * 60 * 60
+
+# Email (invitations and password reset). Without EMAIL_HOST nothing is sent: messages go to the log,
+# and the Users page shows the activation link and temporary password instead.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND') or (
+    'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST else 'django.core.mail.backends.console.EmailBackend')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT') or 587)
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', '').lower() in ('1', 'true', 'yes')
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', '').lower() in ('1', 'true', 'yes')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT') or 20)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or 'DIMENSION Study <noreply@dimension.tamris.org>'
+
+# SMS for phone verification (accounts.sms): console | nextsms | africastalking.
+SMS_BACKEND = os.environ.get('SMS_BACKEND', 'console')
+SMS_TEST_MODE = os.environ.get('SMS_TEST_MODE', '').lower() in ('1', 'true', 'yes')
+NEXTSMS_API_TOKEN = os.environ.get('NEXTSMS_API_TOKEN', '')
+NEXTSMS_USERNAME = os.environ.get('NEXTSMS_USERNAME', '')
+NEXTSMS_PASSWORD = os.environ.get('NEXTSMS_PASSWORD', '')
+NEXTSMS_SENDER_ID = os.environ.get('NEXTSMS_SENDER_ID', '')
+AT_USERNAME = os.environ.get('AT_USERNAME', '')
+AT_API_KEY = os.environ.get('AT_API_KEY', '')
+AT_SENDER_ID = os.environ.get('AT_SENDER_ID', '')

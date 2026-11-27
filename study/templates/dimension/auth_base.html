@@ -1,0 +1,23 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Log in{% endblock %} · DIMENSION Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'dimension/site.css' %}">
+</head>
+<body class="login-page">
+<main class="login">
+  <section class="card login-card">
+    <p class="eyebrow">DIMENSION STUDY</p>
+    {% if messages %}<ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>{% endif %}
+    {% block card %}{% endblock %}
+  </section>
+  <p class="rng">Draft system: test data only.</p>
+</main>
+<script src="{% static 'dimension/password.js' %}"></script>
+</body>
+</html>

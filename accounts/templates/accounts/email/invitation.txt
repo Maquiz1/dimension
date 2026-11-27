@@ -1,0 +1,17 @@
+{% autoescape off %}Hello {{ user.first_name }},
+
+{% firstof invited_by.get_full_name invited_by.username %} created your account on the DIMENSION Study data system.
+
+1. Activate your account by opening this link (it works for {{ days }} days):
+   {{ link }}
+
+2. Log in at {{ login_url }}
+   Username: {{ user.username }}  (you can also use your email address)
+   Temporary password: {{ password }}
+
+3. You will then be asked to choose your own password.
+
+Do not share this email. If you were not expecting it, ignore it.
+
+DIMENSION Study data system
+{% endautoescape %}

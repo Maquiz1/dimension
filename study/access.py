@@ -25,7 +25,34 @@ def staff_required(view):
 
 
 class StaffAuthenticationForm(AuthenticationForm):
-    """Only staff accounts can sign in here, as in the admin."""
+    """Only staff accounts can sign in here, as in the admin. The username box also takes the email address."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Username or email'
+        self.fields['username'].max_length = 254
+        self.fields['username'].widget.attrs['maxlength'] = 254
+
+    def clean(self):
+        try:
+            return super().clean()
+        except forms.ValidationError as error:
+            if error.code == 'invalid_login':
+                self._explain_inactive()
+            raise
+
+    def _explain_inactive(self):
+        """Say why the right password is refused, rather than "wrong password", for accounts that cannot log in yet."""
+        from accounts.backends import find_user
+        from accounts.signals import profile_for
+
+        user = find_user(self.cleaned_data.get('username'))
+        if user and not user.is_active and user.check_password(self.cleaned_data.get('password') or ''):
+            if profile_for(user).status == 'pending':
+                raise forms.ValidationError('Your account is not activated yet. Open the activation link in the '
+                                            'invitation email first, or ask an administrator to send a new one.',
+                                            code='not_activated')
+            raise forms.ValidationError('This account has been deactivated. Ask an administrator.', code='inactive')
 
     def confirm_login_allowed(self, user):
         super().confirm_login_allowed(user)

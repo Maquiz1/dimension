@@ -1,15 +1,5 @@
-{% load static %}<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Log in · DIMENSION Study</title>
-<link rel="stylesheet" href="{% static 'dimension/site.css' %}">
-</head>
-<body class="login-page">
-<main class="login">
-  <section class="card login-card">
-    <p class="eyebrow">DIMENSION STUDY</p>
+{% extends "dimension/auth_base.html" %}
+{% block card %}
     <h1>Log in</h1>
     <p class="sub">Digital mental health training in 20 HIV clinics, Tanzania. For study staff only.</p>
     {% if form.non_field_errors %}<ul class="messages"><li class="error">{{ form.non_field_errors|join:" " }}</li></ul>{% endif %}
@@ -17,7 +7,7 @@
       {% csrf_token %}
       <input type="hidden" name="next" value="{{ next }}">
       <div class="field">
-        <label for="{{ form.username.id_for_label }}">Username</label>
+        <label for="{{ form.username.id_for_label }}">Username or email</label>
         {{ form.username }}
         {{ form.username.errors }}
       </div>
@@ -28,8 +18,5 @@
       </div>
       <button class="btn" type="submit">Log in</button>
     </form>
-  </section>
-  <p class="rng">Draft system: test data only.</p>
-</main>
-</body>
-</html>
+    <p class="login-foot"><a href="{% url 'password-reset' %}">Forgot your password?</a></p>
+{% endblock %}

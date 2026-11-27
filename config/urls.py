@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
+from accounts import views as accounts
 from study import pages, submissions
 from study.access import StudyLoginView
 from study.views import dashboard, presentation, presentation_live, presentation_pptx, slideshow
@@ -38,6 +39,15 @@ urlpatterns = [
     path('users/add/', pages.user_edit, name='user-add'),
     path('users/<int:pk>/edit/', pages.user_edit, name='user-edit'),
     path('users/<int:pk>/password/', pages.user_password, name='user-password'),
+    path('users/<int:pk>/<str:action>/', pages.user_status, name='user-status'),
+    path('profile/', accounts.profile, name='profile'),
+    path('profile/phone/send/', accounts.phone_send, name='phone-send'),
+    path('profile/phone/verify/', accounts.phone_verify, name='phone-verify'),
+    path('activate/<uidb64>/<token>/', accounts.activate, name='activate'),
+    path('password/forgot/', accounts.PasswordResetView.as_view(), name='password-reset'),
+    path('password/forgot/sent/', accounts.PasswordResetDoneView.as_view(), name='password-reset-done'),
+    path('password/reset/<uidb64>/<token>/', accounts.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('password/reset/done/', accounts.PasswordResetCompleteView.as_view(), name='password-reset-complete'),
     path('password/', pages.password_change, name='password-change'),
     path('presentation/', presentation, name='presentation'),
     path('presentation/live/', presentation_live, name='presentation-live'),

@@ -293,24 +293,25 @@ class StudyPagesTests(TestCase):
         from django.contrib.auth.models import User
         self.client.force_login(self.admin)
         response = self.client.post('/users/add/', {
-            'username': 'ra1', 'first_name': 'Asha', 'last_name': 'M', 'email': 'ra1@x.org', 'is_active': 'on',
-            'role': 'staff', 'manage_documents': 'on', 'password1': 'Strong-pass-2026', 'password2': 'Strong-pass-2026'})
+            'username': 'ra1', 'first_name': 'Asha', 'last_name': 'M', 'email': 'ra1@x.org',
+            'role': 'staff', 'manage_documents': 'on'})
         self.assertRedirects(response, '/users/', fetch_redirect_response=False)
         ra = User.objects.get(username='ra1')
-        self.assertTrue(ra.is_staff and not ra.is_superuser and ra.check_password('Strong-pass-2026'))
-        self.assertTrue(ra.has_perm('resources.delete_studydocument'))
+        self.assertTrue(ra.is_staff and not ra.is_superuser and not ra.is_active)
+        self.assertTrue(ra.user_permissions.filter(codename='delete_studydocument').exists())   # has_perm is False until activated
         response = self.client.post(f'/users/{self.admin.pk}/edit/', {
-            'username': 'boss', 'email': 'b@x.org', 'role': 'staff', 'is_active': 'on'})
+            'username': 'boss', 'first_name': 'B', 'last_name': 'S', 'email': 'b@x.org', 'role': 'staff'})
         self.assertContains(response, 'cannot remove your own administrator role')
-        response = self.client.post(f'/users/{ra.pk}/password/', {'new_password1': 'Another-pass-2026', 'new_password2': 'Another-pass-2026'})
+        response = self.client.post(f'/users/{self.staff.pk}/password/', {'new_password1': 'Another-pass-2026', 'new_password2': 'Another-pass-2026'})
         self.assertRedirects(response, '/users/', fetch_redirect_response=False)
-        ra.refresh_from_db()
-        self.assertTrue(ra.check_password('Another-pass-2026'))
+        self.staff.refresh_from_db()
+        self.assertTrue(self.staff.check_password('Another-pass-2026'))
+        self.assertTrue(self.staff.profile.must_change_password)
 
     def test_change_own_password_and_stay_logged_in(self):
         self.client.force_login(self.staff)
         response = self.client.post('/password/', {'old_password': 'pass-1234-x', 'new_password1': 'Fresh-pass-2026', 'new_password2': 'Fresh-pass-2026'})
-        self.assertRedirects(response, '/', fetch_redirect_response=False)
+        self.assertRedirects(response, '/profile/', fetch_redirect_response=False)
         self.assertEqual(self.client.get('/').status_code, 200)
 
 
